@@ -1,0 +1,88 @@
+{
+  "sourceFiles": 31,
+  "sourceBytes": 36831866,
+  "boardRecords": 769,
+  "provinceRecords": 20,
+  "schoolRecords": 50102,
+  "byFile": [
+    {
+      "file": "Grade-3-2021-2022-Achievement-Results.zip",
+      "rows": 3685,
+      "boards": 77,
+      "schools": 3606,
+      "province": 2
+    },
+    {
+      "file": "Grade-3-2022-2023-Achievement-Results.zip",
+      "rows": 3688,
+      "boards": 77,
+      "schools": 3609,
+      "province": 2
+    },
+    {
+      "file": "Grade-3-2023-2024-Achievement-Results.zip",
+      "rows": 3697,
+      "boards": 77,
+      "schools": 3618,
+      "province": 2
+    },
+    {
+      "file": "Grade-3-2024-2025-Achievement-Results.zip",
+      "rows": 3697,
+      "boards": 76,
+      "schools": 3619,
+      "province": 2
+    },
+    {
+      "file": "Grade-3-2025-2026-Achievement-Results.zip",
+      "rows": 3705,
+      "boards": 77,
+      "schools": 3626,
+      "province": 2
+    },
+    {
+      "file": "Grade-6-2021-2022-Achievement-Results.zip",
+      "rows": 3522,
+      "boards": 77,
+      "schools": 3443,
+      "province": 2
+    },
+    {
+      "file": "Grade-6-2022-2023-Achievement-Results.zip",
+      "rows": 3519,
+      "boards": 77,
+      "schools": 3440,
+      "province": 2
+    },
+    {
+      "file": "Grade-6-2023-2024-Achievement-Results.zip",
+      "rows": 3516,
+      "boards": 77,
+      "schools": 3437,
+      "province": 2
+    },
+    {
+      "file": "Grade-6-2024-2025-Achievement-Results.zip",
+      "rows": 3520,
+      "boards": 77,
+      "schools": 3441,
+      "province": 2
+    },
+    {
+      "file": "Grade-6-2025-2026-Achievement-Results.zip",
+      "rows": 3532,
+      "boards": 77,
+      "schools": 3453,
+      "province": 2
+    }
+  ],
+  "checks": [
+    "all planned source files present",
+    "SHA256 recorded",
+    "unique organisation keys per grade/year",
+    "published numeric rates agree with numerator/denominator to rounding",
+    "suppression-applied source rows only",
+    "French workbook translations not double-counted",
+    "2019-20 and 2020-21 carry-forward results not treated as new assessments"
+  ]
+}

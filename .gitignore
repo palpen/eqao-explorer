@@ -1,0 +1,11 @@
+node_modules/
+releases/
+scripts/downloads.curl
+tests/*.png
+tests/browser-validation.json
+tests/filtered-export.csv
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.env.*

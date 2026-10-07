@@ -1,0 +1,2 @@
+data/raw/** -diff
+*.csv whitespace=cr-at-eol
