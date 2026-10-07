@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node tests/browser.mjs", "check": "node --check site/app.js" },
+  "scripts": { "test": "node tests/school-browser.mjs && node tests/browser.mjs", "check": "node --check site/app.js && node --check site/school.js" },
   "devDependencies": { "playwright": "1.58.2" }
 }

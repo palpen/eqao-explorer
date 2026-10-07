@@ -4,6 +4,8 @@ scripts/downloads.curl
 tests/*.png
 tests/browser-validation.json
 tests/filtered-export.csv
+tests/school-validation.json
+tests/school-export.csv
 .DS_Store
 __pycache__/
 *.pyc

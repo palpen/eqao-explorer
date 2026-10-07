@@ -2,13 +2,14 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const subjects=['Reading','Writing','Mathematics'];
-const state={view:'boards',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all'};
+const subjectColors=['#28679d','#a5633d','#79658d'];
+const state={view:'myschool',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all',school:'',comparisons:[],radius:5,nearType:'all',expanded:null,showOntario:true,showBoard:true};
 let data;
 const yearLabel=y=>`${y-1}–${String(y).slice(2)}`;
 const pct=v=>v===null||v===undefined?'—':`${Number(v.toFixed(1))}%`;
 const number=v=>v===null||v===undefined?'—':v.toLocaleString('en-CA');
 const delta=v=>v===null||v===undefined?'—':`${v>0?'+':''}${Number(v.toFixed(1))} pp`;
-const board=id=>data.boards.find(b=>b.id===id);
+const board=id=>data?.boards.find(b=>b.id===id);
 function matches(b){return b&&b.language===state.language&&(state.type==='everything'||state.type==='all'&&['Public','Catholic'].includes(b.type)||b.type===state.type)}
 function results(){return data.results.filter(r=>r.year===state.year&&r.grade===state.grade&&matches(board(r.id)))}
 function province(year=state.year,grade=state.grade){return data.province.find(r=>r.year===year&&r.grade===grade&&r.language===state.language)}
@@ -32,14 +33,23 @@ const changeHTML=v=>`<span class="${v===null?'':v>=0?'positive':'negative'}">${d
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,3500)}
 function refreshUrl(){
   const p=new URLSearchParams();for(const k of ['view','grade','language','type','year','subject','focus'])p.set(k,state[k]);p.set('pins',state.pins.join(','));
+  if(state.school)p.set('school',state.school);if(state.comparisons.length)p.set('compare',state.comparisons.join(','));p.set('radius',state.radius);p.set('nearType',state.nearType);
+  try{localStorage.setItem('eqao-my-school-v1',JSON.stringify({school:state.school,comparisons:state.comparisons,radius:state.radius,nearType:state.nearType,grade:state.grade,year:state.view==='archive'?2026:state.year}))}catch{}
   history.replaceState(null,'',`${location.pathname}?${p}`);
 }
 function restoreUrl(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('eqao-my-school-v1'));
+    if(saved){if(/^\d{6}$/.test(saved.school))state.school=saved.school;if(Array.isArray(saved.comparisons))state.comparisons=saved.comparisons.filter(x=>/^\d{6}$/.test(x)).slice(0,4);if([1,3,5,10,25,50].includes(saved.radius))state.radius=saved.radius;if(['all','Public','Catholic','Other authority'].includes(saved.nearType))state.nearType=saved.nearType;if([3,6].includes(saved.grade))state.grade=saved.grade;if([2022,2023,2024,2025,2026].includes(saved.year))state.year=saved.year;}
+  }catch{}
   const p=new URLSearchParams(location.search);
-  for(const [k,allowed] of Object.entries({view:['boards','schools','archive','sources'],language:['en','fr'],type:['all','Public','Catholic','Other authority','everything']}))if(allowed.includes(p.get(k)))state[k]=p.get(k);
+  for(const [k,allowed] of Object.entries({view:['myschool','boards','schools','archive','sources'],language:['en','fr'],type:['all','Public','Catholic','Other authority','everything'],nearType:['all','Public','Catholic','Other authority']}))if(allowed.includes(p.get(k)))state[k]=p.get(k);
   for(const [k,allowed] of Object.entries({grade:[3,6],year:[2018,2019,2022,2023,2024,2025,2026],subject:[0,1,2]}))if(p.has(k)&&allowed.includes(+p.get(k)))state[k]=+p.get(k);
   if(p.has('pins'))state.pins=p.get('pins').split(',').filter(x=>/^\d{5}$/.test(x)).slice(0,4);
   if(/^\d{5}$/.test(p.get('focus')||''))state.focus=p.get('focus');
+  if(p.has('school'))state.school=/^\d{6}$/.test(p.get('school'))?p.get('school'):'';
+  if(p.has('compare'))state.comparisons=p.get('compare').split(',').filter(x=>/^\d{6}$/.test(x)).slice(0,4);
+  if(p.has('radius')&&[1,3,5,10,25,50].includes(+p.get('radius')))state.radius=+p.get('radius');
   if(state.view==='archive'&&state.year>2019)state.year=2019;
   if(state.view!=='archive'&&state.year<2022)state.year=2026;
   $('#language').value=state.language;$('#boardType').value=state.type;
@@ -58,16 +68,20 @@ function render(){
   $$('#grades button').forEach(b=>{const on=+b.dataset.grade===state.grade;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',on)});
   $$('#subjects button').forEach(b=>{const on=+b.dataset.subject===state.subject;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on)});
   $$('#views button').forEach(b=>{const on=b.dataset.view===state.view;b.classList.toggle('active',on);b.setAttribute('aria-current',on?'page':'false')});
-  const titles={boards:['BOARD COMPARISON','A clearer view of achievement.','Compare Ontario’s school boards and follow results over time.'],schools:['SCHOOL EXPLORER','Look closer, school by school.','Find a school, compare its results, and explore its recent history.'],archive:['HISTORICAL ARCHIVE','Before the digital assessments.','Explore the oldest province-wide raw school results located in the current public catalogues.'],sources:['SOURCES & COVERAGE','Know what is behind the numbers.','Original files, definitions, data coverage, and reproducible downloads.']};
+  const titles={myschool:['MY CHILD’S SCHOOL','Start with your school.','See how it’s doing, follow the changes, and find useful questions to ask.'],boards:['BOARD COMPARISON','A clearer view of achievement.','Compare Ontario’s school boards and follow results over time.'],schools:['SCHOOL EXPLORER','Look closer, school by school.','Find a school, compare its results, and explore its recent history.'],archive:['HISTORICAL ARCHIVE','Before the digital assessments.','Explore the oldest province-wide raw school results located in the current public catalogues.'],sources:['SOURCES & COVERAGE','Know what is behind the numbers.','Original files, definitions, data coverage, and reproducible downloads.']};
   const title=titles[state.view];$('#section-label').textContent=title[0];$('#page-title').textContent=title[1];$('#page-description').textContent=title[2];
   $('.toolbar').hidden=state.view==='sources';$('#side-controls').hidden=state.view==='sources';$('#export').hidden=state.view==='sources';
+  document.body.classList.toggle('school-home',state.view==='myschool');
   const years=state.view==='archive'?data.archiveYears:data.years;
   $('#year').innerHTML=[...years].reverse().map(y=>`<option value="${y}" ${y===state.year?'selected':''}>${yearLabel(y)}</option>`).join('');
+  $('#home-year').innerHTML=$('#year').innerHTML;
+  $$('#home-grades button').forEach(b=>{const on=+b.dataset.homeGrade===state.grade;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',on)});
   const notice=$('#notice');notice.hidden=true;
   if(state.view==='archive'){notice.hidden=false;notice.innerHTML='<strong>Different measurement basis.</strong> These Ministry workbooks contain school-level results. Any board summary below is an unweighted mean of reported school percentages, not an official board result. Assessment format and reporting changed after 2018–19; these results are kept separate from the current series.'}
   else if(state.year===2022&&state.view!=='sources'){notice.hidden=false;notice.innerHTML='<strong>2021–22 calculation note.</strong> EQAO says these CSV values may differ from its interactive dashboards because of calculation methods. This app uses the published CSV values consistently.'}
   refreshUrl();
-  if(state.view==='boards')renderBoards(rs);
+  if(state.view==='myschool')renderMySchool(token);
+  else if(state.view==='boards')renderBoards(rs);
   else if(state.view==='sources')renderSources();
   else renderSchools(token);
 }
@@ -100,8 +114,8 @@ function drawTrend(el,series,years,readout,options={}){
   const w=Math.max(260,el.clientWidth),direct=w>=580,h=direct?350:310;
   const m={l:38,r:direct?158:12,t:options.annotate?82:42,b:38},iw=w-m.l-m.r,ih=h-m.t-m.b;
   const numericValues=series.flatMap(s=>s.values).filter(v=>Number.isFinite(v));
-  let lower=numericValues.length?Math.max(0,Math.floor((Math.min(...numericValues)-8)/10)*10):0;
-  let upper=numericValues.length?Math.min(100,Math.ceil((Math.max(...numericValues)+8)/10)*10):100;
+  let lower=options.fixedScale?0:numericValues.length?Math.max(0,Math.floor((Math.min(...numericValues)-8)/10)*10):0;
+  let upper=options.fixedScale?100:numericValues.length?Math.min(100,Math.ceil((Math.max(...numericValues)+8)/10)*10):100;
   if(upper-lower<30){lower=Math.max(0,upper-30);upper=Math.min(100,lower+30)}
   const x=j=>m.l+j*iw/Math.max(1,years.length-1),y=v=>m.t+ih*(1-(v-lower)/(upper-lower));
   const title='Students at the provincial standard (%)';
@@ -201,8 +215,8 @@ async function showSchool(id){
   try{
     const all=await Promise.all(years.map(y=>getSchools(y,grade)));if(!dialog.open)return;
     const historyRows=all.map(rs=>rs.find(r=>r.id===id&&r.language===lang));
-    el.innerHTML=`<p class="eyebrow">SCHOOL ${id} · GRADE ${grade}</p><h2>${esc(school.name)}</h2><p class="muted small">${esc(board(school.board)?.name)} · ${esc(school.city||'Ontario')}</p>${archive?'<div class="notice">Historical Ministry school percentages. Kept separate from current digital assessments.</div>':''}<div id="school-trend" class="chart"></div><div class="chart-readout" id="school-readout" aria-live="polite">Tap a point to see the result.</div><div class="table-wrap"><table><thead><tr><th>School year</th>${subjects.map(s=>`<th class="numeric">${s}</th>`).join('')}</tr></thead><tbody>${historyRows.map((r,j)=>`<tr><td>${yearLabel(years[j])}</td>${subjects.map((s,i)=>`<td class="numeric">${rawLabel(r,i)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="small muted" style="margin-top:18px">Missing and suppressed results remain gaps. These are different groups of students each year, not a tracked student cohort. School names and board membership can change.</p><a class="small" href="downloads/${encodeURIComponent(school.source)}" download>Download the original ${yearLabel(selectedYear)} source</a>`;
-    schoolChartRedraw=()=>drawTrend($('#school-trend'),subjects.map((s,i)=>({name:s,color:colors[i],values:historyRows.map(r=>r?.values[i]??null)})),years,$('#school-readout'),{selectedYear});
+    el.innerHTML=`<p class="eyebrow">SCHOOL ${id} · GRADE ${grade}</p><h2>${esc(school.name)}</h2><p class="muted small">${esc(board(school.board)?.name)} · ${esc(school.city||'Ontario')}</p>${archive?'<div class="notice">Historical Ministry school percentages. Kept separate from current digital assessments.</div>':`<button class="button" data-use-school="${id}">Make this my school</button>`}<div id="school-trend" class="chart"></div><div class="chart-readout" id="school-readout" aria-live="polite">Tap a point to see the result.</div><div class="table-wrap"><table><thead><tr><th>School year</th>${subjects.map(s=>`<th class="numeric">${s}</th>`).join('')}</tr></thead><tbody>${historyRows.map((r,j)=>`<tr><td>${yearLabel(years[j])}</td>${subjects.map((s,i)=>`<td class="numeric">${rawLabel(r,i)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="small muted" style="margin-top:18px">Missing and suppressed results remain gaps. These are different groups of students each year, not a tracked student cohort. School names and board membership can change.</p><a class="small" href="downloads/${encodeURIComponent(school.source)}" download>Download the original ${yearLabel(selectedYear)} source</a>`;
+    schoolChartRedraw=()=>drawTrend($('#school-trend'),subjects.map((s,i)=>({name:s,color:subjectColors[i],values:historyRows.map(r=>r?.values[i]??null)})),years,$('#school-readout'),{selectedYear});
     schoolChartRedraw();
   }catch(e){el.insertAdjacentHTML('beforeend','<p class="error">The school history could not be loaded. Close this panel and try again.</p>')}
 }

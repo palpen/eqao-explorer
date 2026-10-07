@@ -35,4 +35,29 @@ for year in [2018,2019]:
             assert r['raw']==[str(original[f'Percentage of Grade {grade} Students Achieving the Provincial Standard in {s}']) if original[f'Percentage of Grade {grade} Students Achieving the Provincial Standard in {s}'] is not None else 'NA' for s in ['Reading','Writing','Mathematics']]
     w.close()
 assert not any((root/f'site/data/schools-{y}-3.json').exists() for y in [2020,2021])
-print(f'PASS: {checks} board records and subgroup joins match original CSVs; historical school percentages match XLSX; 31 download hashes match; carry-forward years absent.')
+school_index=json.loads((root/'site/data/schools-index.json').read_text())
+assert len({s['id'] for s in school_index})==len(school_index)
+current_records={}
+for year in core['years']:
+    for grade in [3,6]:
+        for record in json.loads((root/f'site/data/schools-{year}-{grade}.json').read_text()):
+            current_records.setdefault(record['id'],[]).append(record)
+assert set(current_records)=={s['id'] for s in school_index}
+for s in school_index:
+    records=current_records[s['id']]
+    assert s['latestYear']==max(r['year'] for r in records)
+    assert set(s['grades'])=={r['grade'] for r in records}
+    assert any((s['name'],s['board'],s['language'])==(r['name'],r['board'],r['language']) for r in records if r['year']==s['latestYear'])
+    if s['locationSource'] is None:assert s['lat'] is None and s['lon'] is None
+for filename in {s['locationSource'] for s in school_index if s['locationSource']}:
+    w=openpyxl.load_workbook(root/'data/raw'/filename,read_only=True,data_only=True)
+    it=w.worksheets[0].values;heads=next(it)
+    originals={str(r[3]).zfill(6):dict(zip(heads,r)) for r in it}
+    for s in school_index:
+        if s['locationSource']!=filename:continue
+        original=originals[s['id']]
+        assert s['lat']==original['Latitude'] and s['lon']==original['Longitude']
+        assert s['city']==(original['City'] or '')
+    w.close()
+assert (root/'data/processed/schools-index.json').read_bytes()==(root/'site/data/schools-index.json').read_bytes()
+print(f'PASS: {checks} board records and subgroup joins match original CSVs; historical percentages match XLSX; {len(school_index)} school identities and location records match sources; 31 download hashes match; carry-forward years absent.')

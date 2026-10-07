@@ -1,11 +1,17 @@
 # EQAO Explorer
 
-EQAO Explorer is a responsive dashboard for Ontario Grade 3 and Grade 6 reading, writing, and mathematics achievement. It brings official EQAO and Ontario Ministry of Education data into one interface for exploring schools, comparing boards, and viewing provincial trends.
+EQAO Explorer is a responsive dashboard built around **My child’s school**. Choose a school to understand its Grade 3 and Grade 6 reading, writing, and mathematics results, how they change over time, and how they compare with its board, Ontario, and selected schools nearby. The board explorer, historical archive, and original downloads remain available.
 
 The app is static HTML, CSS, and JavaScript. It has no backend, database, account system, or API key requirement. The repository includes the prepared data and original source downloads, so you can run or deploy it immediately without rebuilding the dataset. This is an independent project, not an official EQAO reporting tool.
 
 ## What you can explore
 
+- A compact school control that stays at the top as you scroll. **Change school** opens a single search field with matching schools underneath; click or use the arrow keys and Enter to select a school. The search stays hidden during normal review. School, grade/year, and comparison choices are saved in your browser and can also be shared through the URL.
+- Three subject cards with published school, board and Ontario results, annual change, and the Ontario gap; a side-by-side grade overview.
+- Three trend charts on a consistent 0–100% scale, with blue for reading, terracotta for writing, and purple for mathematics; the same colours carry into expanded charts. Expand to compare with Ontario, the school’s board, and up to four chosen schools.
+- Relative progress: how the school’s gap changes against each benchmark or selected school, rather than just whether its own score rises.
+- Nearby schools within 1–50 km, with language system, board type, current results, subject-specific changes and participant counts. Schools beyond the radius can be selected by name.
+- Achievement-level distributions, participation, and questions grounded in persistent patterns. Suppressed, bounded and missing values remain explicit.
 - Official school, board, and provincial results for **2021–22 through 2025–26**.
 - A separate historical school archive for **2017–18 and 2018–19**.
 - English- and French-language systems, public and Catholic district boards, and other authorities.
@@ -56,7 +62,7 @@ For a single file, open it on GitHub and use **Download raw file** or **Raw**, d
 - [EQAO Open Data](https://www.eqao.com/about-eqao/open-data/): Grade 3/6 achievement ZIPs and aggregate field definitions.
 - [Ontario school information and student demographics](https://data.ontario.ca/dataset/school-information-and-student-demographics): school-information XLSX workbooks.
 
-The included snapshot contains 10 achievement ZIPs, 5 field-definition workbooks, and 16 English/French Ministry workbooks: **31 files, 36,831,866 bytes**. French workbook editions are retained as originals but are not ingested a second time. Questionnaire datasets are outside this app's scope. Consult the publishers' terms for reuse of their data.
+The included snapshot contains 10 achievement ZIPs, 5 field-definition workbooks, and 16 English/French Ministry workbooks: **31 files, 36,831,866 bytes**. French workbook editions are retained as originals but are not ingested a second time. Student questionnaire results on interest and confidence are the next data addition; the current collection does not include them. The school-life panel identifies broader school-specific information that still needs separate source research. Consult the publishers' terms for reuse of their data.
 
 ## Re-download and rebuild the included snapshot
 
@@ -106,6 +112,7 @@ Publish **the contents of `site/`** as the web root. The deployed root must cont
 ```text
 index.html
 app.js
+school.js
 style.css
 data/
 downloads/
@@ -150,8 +157,8 @@ Replace `YOUR-TAILNOW-HOST` with your own host. This requires a separately confi
 
 Open the app and check that:
 
-1. Board results load and Grade 3/6, subject, year, language, and board-type filters work.
-2. School search and a school-history dialog load.
+1. Choose a school; its subject cards, grade overview, trends and achievement levels load. Grade 3/6 and year controls work and saved choices survive a reload.
+2. Select nearby schools, expand a subject chart, toggle benchmarks, change the distance and board-type filters, and export the comparison CSV. The separate school search and history dialog also load.
 3. The historical archive and Sources view open.
 4. A CSV export and an original source download succeed.
 5. The layout fits a narrow browser window.
@@ -176,11 +183,12 @@ To test a deployed installation instead:
 
 ```sh
 node tests/browser.mjs https://YOUR-HOST/eqao-explorer/
+node tests/school-browser.mjs https://YOUR-HOST/eqao-explorer/
 ```
 
-Include a trailing slash for a directory URL. The browser suite checks desktop/mobile layouts, filters, charts, exports, school history, the archive, all 31 source download links, and uncaught browser errors. Screenshots and its report are written into `tests/` and excluded from Git. Set `CHROME_PATH` if you want to use an existing Chrome executable instead of Playwright's Chromium.
+Include a trailing slash for a directory URL. The browser suites check the school-first view, persistence, exact source-backed results, relative-progress arithmetic, missing/suppressed data, distance comparisons, grade/year switches, desktop/mobile layouts, exports, school history, the archive, all 31 source download links, and uncaught browser errors. Screenshots and their reports are written into `tests/` and excluded from Git. Set `CHROME_PATH` if you want to use an existing Chrome executable instead of Playwright's Chromium.
 
-If results fail to load, confirm `data/core.json` and the school JSON files are reachable beneath the app URL. If source links fail, confirm `downloads/` was uploaded. When updating a deployment, replace the complete `site/` contents together so code and data stay consistent.
+If results fail to load, confirm `data/core.json`, `data/schools-index.json`, and the school JSON files are reachable beneath the app URL. If source links fail, confirm `downloads/` was uploaded. When updating a deployment, replace the complete `site/` contents together so code and data stay consistent.
 
 ## Repository layout
 

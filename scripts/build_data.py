@@ -37,7 +37,7 @@ for filename,year in [('sif_data_table_2017_2018_en.xlsx',2018),('sif_data_table
         r=dict(zip(headers,values));bid=ident(r['Board Number']);sid=schoolid(r['School Number'])
         lang='fr' if r['School Language']=='French' else 'en'
         boards[bid]={'id':bid,'name':r['Board Name'],'type':boardtype(r['Board Type'] or ''),'language':lang}
-        schoolmeta[sid]={'city':r.get('City') or '', 'lat':num(r.get('Latitude')),'lon':num(r.get('Longitude'))}
+        schoolmeta[sid]={'city':r.get('City') or '', 'lat':num(r.get('Latitude')),'lon':num(r.get('Longitude')), 'locationYear':year,'locationSource':filename}
         if year==2025:continue
         for grade in [3,6]:
             raw=[str(v) if v is not None and v!='' else 'NA' for v in [r.get(f'Percentage of Grade {grade} Students Achieving the Provincial Standard in {s}') for s in ['Reading','Writing','Mathematics']]]
@@ -46,7 +46,7 @@ for filename,year in [('sif_data_table_2017_2018_en.xlsx',2018),('sif_data_table
             legacy.setdefault((year,grade),[]).append(rec)
     w.close()
 
-boardrows=[];provincerows=[];schoolcounts={};source_checks=[]
+boardrows=[];provincerows=[];schoolcounts={};source_checks=[];schoolindex={}
 for f in sorted(RAW.glob('Grade-*-Achievement-Results.zip')):
     grade,start,year=map(int,re.search(r'Grade-(\d)-(\d{4})-(\d{4})',f.name).groups())
     schools=[]
@@ -88,12 +88,18 @@ for f in sorted(RAW.glob('Grade-*-Achievement-Results.zip')):
             rec['id']='province-'+lang;rec['name']='Ontario ('+('English' if lang=='en' else 'French')+')';provincerows.append(rec)
         elif org=='S':
             rec['city']=schoolmeta.get(sid,{}).get('city','');schools.append(rec)
+            entry=schoolindex.setdefault(sid,{'id':sid,'grades':[],'latestYear':0})
+            if grade not in entry['grades']:entry['grades'].append(grade)
+            if year>=entry['latestYear']:
+                entry.update(name=rec['name'],board=bid,language=lang,latestYear=year,**schoolmeta.get(sid,{'city':'','lat':None,'lon':None,'locationYear':None,'locationSource':None}))
     write(f'schools-{year}-{grade}.json',schools)
     schoolcounts[f'{year}-{grade}']=len(schools)
     source_checks.append({'file':f.name,'rows':len(rows),'boards':sum(r['OrgType']=='B' for r in rows),'schools':len(schools),'province':sum(r['OrgType']=='P' for r in rows)})
 
 for (year,grade),records in legacy.items():
     write(f'schools-{year}-{grade}.json',records);schoolcounts[f'{year}-{grade}']=len(records)
+
+write('schools-index.json',sorted(schoolindex.values(),key=lambda r:r['name']))
 
 core={'updated':'2026-10-06','years':[2022,2023,2024,2025,2026],'archiveYears':[2018,2019], 'boards':sorted(boards.values(),key=lambda b:b['name']), 'results':boardrows,'province':provincerows,'schoolCounts':schoolcounts,'sources':[{k:v for k,v in m.items() if k!='catalogue_metadata'} for m in manifest]}
 write('core.json',core)
