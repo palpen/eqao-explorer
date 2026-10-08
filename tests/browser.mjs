@@ -53,6 +53,10 @@ await page.locator('[data-view="schools"]').click();await page.locator('#school-
 await page.locator('[data-school]').first().click();await page.locator('#school-trend svg').waitFor();await page.screenshot({path:root+'/tests/school-detail.png'});await page.locator('.dialog-close').click();
 await page.locator('[data-view="archive"]').click();await page.locator('#archive-summary table').waitFor();assert.match(await page.locator('#notice').textContent(),/unweighted/);await page.locator('#year').selectOption('2018');await page.locator('#school-table').waitFor();await page.locator('#toast').waitFor({state:'hidden'});await page.screenshot({path:root+'/tests/archive.png'});
 await page.locator('[data-view="sources"]').click();assert.equal(await page.locator('.source-list li').count(),31);await page.screenshot({path:root+'/tests/sources.png'});
+for(const filename of ['audit.json','calculation-audit.json','publisher-audit.json']){
+  const response=await page.request.get(new URL(`data/${filename}`,base).href);
+  assert.equal(response.status(),200,filename);assert.equal((await response.json()).passed,true,filename);
+}
 await page.goto(boardBase);await page.locator('#board-table tbody tr').first().waitFor();
 await page.setViewportSize({width:1024,height:1000});await page.waitForTimeout(250);await page.screenshot({path:root+'/tests/tablet.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Tablet page should not overflow horizontally');
 await page.setViewportSize({width:390,height:844});await page.waitForTimeout(250);await page.screenshot({path:root+'/tests/mobile.png',fullPage:true});

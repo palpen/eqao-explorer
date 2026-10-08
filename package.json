@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node tests/school-browser.mjs && node tests/browser.mjs", "check": "node --check site/app.js && node --check site/school.js" },
-  "devDependencies": { "playwright": "1.58.2" }
+  "scripts": {
+    "test": "node tests/calculations.mjs && node tests/school-browser.mjs && node tests/browser.mjs && node tests/trends-browser.mjs && node tests/navigation-browser.mjs",
+    "check": "node --check site/app.js && node --check site/school.js && node --check site/trends.js",
+    "test:calculations": "node tests/calculations.mjs",
+    "test:browser": "node tests/school-browser.mjs && node tests/browser.mjs && node tests/trends-browser.mjs && node tests/navigation-browser.mjs",
+    "test:data": "python3 tests/data.py"
+  },
+  "devDependencies": {
+    "playwright": "1.58.2"
+  }
 }

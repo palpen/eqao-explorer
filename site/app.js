@@ -3,7 +3,9 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const subjects=['Reading','Writing','Mathematics'];
 const subjectColors=['#28679d','#a5633d','#79658d'];
-const state={view:'myschool',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all',school:'',comparisons:[],radius:5,nearType:'all',expanded:null,showOntario:true,showBoard:true};
+const defaultState=()=>({view:'myschool',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all',school:'',comparisons:[],radius:5,nearType:'all',expanded:null,showOntario:true,showBoard:true,trendSubject:'all',trendBoard:'all',trendMinimum:0,trendConsistent:false});
+const state=defaultState();
+let pushNavigation=false;
 let data;
 const yearLabel=y=>`${y-1}–${String(y).slice(2)}`;
 const pct=v=>v===null||v===undefined?'—':`${Number(v.toFixed(1))}%`;
@@ -14,7 +16,7 @@ function matches(b){return b&&b.language===state.language&&(state.type==='everyt
 function results(){return data.results.filter(r=>r.year===state.year&&r.grade===state.grade&&matches(board(r.id)))}
 function province(year=state.year,grade=state.grade){return data.province.find(r=>r.year===year&&r.grade===grade&&r.language===state.language)}
 function setGrade(g){state.grade=g;render()}
-function setView(v){state.view=v;state.search='';state.page=0;if(v==='archive')state.year=2019;else if(state.year<2022)state.year=2026;render()}
+function setView(v){pushNavigation=state.view!==v;state.view=v;state.search='';state.page=0;if(v==='archive')state.year=2019;else if(state.year<2022)state.year=2026;render()}
 $('#grades').onclick=e=>{const b=e.target.closest('[data-grade]');if(b)setGrade(+b.dataset.grade)};
 $('#subjects').onclick=e=>{const b=e.target.closest('[data-subject]');if(b){state.subject=+b.dataset.subject;render()}};
 $('#year').onchange=e=>{state.year=+e.target.value;render()};
@@ -33,17 +35,25 @@ const changeHTML=v=>`<span class="${v===null?'':v>=0?'positive':'negative'}">${d
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,3500)}
 function refreshUrl(){
   const p=new URLSearchParams();for(const k of ['view','grade','language','type','year','subject','focus'])p.set(k,state[k]);p.set('pins',state.pins.join(','));
-  if(state.school)p.set('school',state.school);if(state.comparisons.length)p.set('compare',state.comparisons.join(','));p.set('radius',state.radius);p.set('nearType',state.nearType);
+  p.set('school',state.school);p.set('compare',state.comparisons.join(','));p.set('radius',state.radius);p.set('nearType',state.nearType);
+  p.set('trendSubject',state.trendSubject);p.set('trendBoard',state.trendBoard);p.set('trendMinimum',state.trendMinimum);p.set('trendConsistent',state.trendConsistent?'1':'0');
   try{localStorage.setItem('eqao-my-school-v1',JSON.stringify({school:state.school,comparisons:state.comparisons,radius:state.radius,nearType:state.nearType,grade:state.grade,year:state.view==='archive'?2026:state.year}))}catch{}
-  history.replaceState(null,'',`${location.pathname}?${p}`);
+  const url=`${location.pathname}?${p}`,snapshot={eqao:{...state}};
+  if(pushNavigation&&url!==`${location.pathname}${location.search}`)history.pushState(snapshot,'',url);
+  else history.replaceState(snapshot,'',url);
+  pushNavigation=false;
 }
-function restoreUrl(){
+function restoreUrl(useSaved=true){
+  Object.assign(state,defaultState());
   try{
-    const saved=JSON.parse(localStorage.getItem('eqao-my-school-v1'));
+    const saved=useSaved?JSON.parse(localStorage.getItem('eqao-my-school-v1')):null;
     if(saved){if(/^\d{6}$/.test(saved.school))state.school=saved.school;if(Array.isArray(saved.comparisons))state.comparisons=saved.comparisons.filter(x=>/^\d{6}$/.test(x)).slice(0,4);if([1,3,5,10,25,50].includes(saved.radius))state.radius=saved.radius;if(['all','Public','Catholic','Other authority'].includes(saved.nearType))state.nearType=saved.nearType;if([3,6].includes(saved.grade))state.grade=saved.grade;if([2022,2023,2024,2025,2026].includes(saved.year))state.year=saved.year;}
   }catch{}
   const p=new URLSearchParams(location.search);
-  for(const [k,allowed] of Object.entries({view:['myschool','boards','schools','archive','sources'],language:['en','fr'],type:['all','Public','Catholic','Other authority','everything'],nearType:['all','Public','Catholic','Other authority']}))if(allowed.includes(p.get(k)))state[k]=p.get(k);
+  for(const [k,allowed] of Object.entries({view:['myschool','boards','schools','trends','archive','sources'],language:['en','fr'],type:['all','Public','Catholic','Other authority','everything'],nearType:['all','Public','Catholic','Other authority'],trendSubject:['all','0','1','2']}))if(allowed.includes(p.get(k)))state[k]=p.get(k);
+  if(/^\d{5}$/.test(p.get('trendBoard')||''))state.trendBoard=p.get('trendBoard');
+  if(p.has('trendMinimum')&&[0,20,30,50,100].includes(+p.get('trendMinimum')))state.trendMinimum=+p.get('trendMinimum');
+  state.trendConsistent=p.get('trendConsistent')==='1';
   for(const [k,allowed] of Object.entries({grade:[3,6],year:[2018,2019,2022,2023,2024,2025,2026],subject:[0,1,2]}))if(p.has(k)&&allowed.includes(+p.get(k)))state[k]=+p.get(k);
   if(p.has('pins'))state.pins=p.get('pins').split(',').filter(x=>/^\d{5}$/.test(x)).slice(0,4);
   if(/^\d{5}$/.test(p.get('focus')||''))state.focus=p.get('focus');
@@ -55,9 +65,23 @@ function restoreUrl(){
   $('#language').value=state.language;$('#boardType').value=state.type;
 }
 restoreUrl();
+window.addEventListener('popstate',event=>{
+  pushNavigation=false;
+  if(event.state?.eqao)Object.assign(state,defaultState(),event.state.eqao);
+  else restoreUrl(false);
+  $('#language').value=state.language;$('#boardType').value=state.type;
+  $('#school-chooser').open=false;$('#school-picker-search').value='';
+  updateSchoolPicker();render();
+});
+for(const link of $$('.brand, .app-home'))link.onclick=event=>{
+  if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+  event.preventDefault();setView('myschool');$('#main').scrollIntoView({block:'start'});
+};
 function render(){
   if(!data)return;
-  const token=++renderToken;chartRedraw=null;
+  const token=++renderToken;chartRedraw=null;schoolChartRedraw=null;
+  const homeTrends=state.view==='myschool'&&!state.school;
+  const displayView=homeTrends?'trends':state.view;
   const rs=results().sort((a,b)=>a.name.localeCompare(b.name));
   if(state.view!=='archive'){
     const available=new Set(rs.map(r=>r.id));
@@ -68,10 +92,13 @@ function render(){
   $$('#grades button').forEach(b=>{const on=+b.dataset.grade===state.grade;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',on)});
   $$('#subjects button').forEach(b=>{const on=+b.dataset.subject===state.subject;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on)});
   $$('#views button').forEach(b=>{const on=b.dataset.view===state.view;b.classList.toggle('active',on);b.setAttribute('aria-current',on?'page':'false')});
-  const titles={myschool:['MY CHILD’S SCHOOL','Start with your school.','See how it’s doing, follow the changes, and find useful questions to ask.'],boards:['BOARD COMPARISON','A clearer view of achievement.','Compare Ontario’s school boards and follow results over time.'],schools:['SCHOOL EXPLORER','Look closer, school by school.','Find a school, compare its results, and explore its recent history.'],archive:['HISTORICAL ARCHIVE','Before the digital assessments.','Explore the oldest province-wide raw school results located in the current public catalogues.'],sources:['SOURCES & COVERAGE','Know what is behind the numbers.','Original files, definitions, data coverage, and reproducible downloads.']};
-  const title=titles[state.view];$('#section-label').textContent=title[0];$('#page-title').textContent=title[1];$('#page-description').textContent=title[2];
+  const titles={myschool:['SELECTED SCHOOL','Start with your school.','See how it’s doing, follow the changes, and find useful questions to ask.'],boards:['BOARD COMPARISON','A clearer view of achievement.','Compare Ontario’s school boards and follow results over time.'],schools:['SCHOOL EXPLORER','Look closer, school by school.','Find a school, compare its results, and explore its recent history.'],archive:['HISTORICAL ARCHIVE','Before the digital assessments.','Explore the oldest province-wide raw school results located in the current public catalogues.'],sources:['SOURCES & COVERAGE','Know what is behind the numbers.','Original files, definitions, data coverage, and reproducible downloads.']};
+  titles.trends=['SCHOOL TRENDS','Where are results moving?','Explore the largest annual changes and the patterns across schools.'];
+  const title=titles[displayView];$('#section-label').textContent=title[0];$('#page-title').textContent=title[1];$('#page-description').textContent=homeTrends?'Explore school trends across Ontario. Choose a school above to see its individual results.':title[2];
   $('.toolbar').hidden=state.view==='sources';$('#side-controls').hidden=state.view==='sources';$('#export').hidden=state.view==='sources';
-  document.body.classList.toggle('school-home',state.view==='myschool');
+  $('#subjects').hidden=displayView==='trends';$('#export').disabled=false;
+  document.body.classList.toggle('school-home',displayView==='myschool');
+  $('.school-context').hidden=displayView!=='myschool';
   const years=state.view==='archive'?data.archiveYears:data.years;
   $('#year').innerHTML=[...years].reverse().map(y=>`<option value="${y}" ${y===state.year?'selected':''}>${yearLabel(y)}</option>`).join('');
   $('#home-year').innerHTML=$('#year').innerHTML;
@@ -80,7 +107,8 @@ function render(){
   if(state.view==='archive'){notice.hidden=false;notice.innerHTML='<strong>Different measurement basis.</strong> These Ministry workbooks contain school-level results. Any board summary below is an unweighted mean of reported school percentages, not an official board result. Assessment format and reporting changed after 2018–19; these results are kept separate from the current series.'}
   else if(state.year===2022&&state.view!=='sources'){notice.hidden=false;notice.innerHTML='<strong>2021–22 calculation note.</strong> EQAO says these CSV values may differ from its interactive dashboards because of calculation methods. This app uses the published CSV values consistently.'}
   refreshUrl();
-  if(state.view==='myschool')renderMySchool(token);
+  if(displayView==='myschool')renderMySchool(token);
+  else if(displayView==='trends')renderSchoolTrends(token);
   else if(state.view==='boards')renderBoards(rs);
   else if(state.view==='sources')renderSources();
   else renderSchools(token);
@@ -222,12 +250,20 @@ async function showSchool(id){
 }
 function renderSources(){
   const sourceUrl='https://www.eqao.com/about-eqao/open-data/';
-  $('#content').innerHTML=`<div class="cards">${card('Original source files','31','10 result archives · 5 dictionaries · 16 workbooks',true)}${card('Raw source size','36.8 <small>MB</small>','Publisher originals, preserved verbatim')}${card('Earliest located','2017–18','School results in Ontario’s current catalogue')}${card('Latest available','2025–26','Grade 3 and Grade 6 EQAO results')}</div><div class="coverage-grid"><section class="panel"><h2>What is available</h2><div class="timeline-row"><strong>2017–19</strong><div class="coverage-stripe legacy">Two historical school years. Grade 3 and Grade 6 reading, writing and mathematics. English and French schools.</div></div><div class="timeline-row"><strong>2019–21</strong><div class="coverage-stripe gap">No new Grade 3/6 results included. Ontario’s 2019–20 and 2020–21 files repeat the 2018–19 assessment results; archived but not counted again.</div></div><div class="timeline-row"><strong>2021–26</strong><div class="coverage-stripe">Five school years of official EQAO board, school and language-system provincial results. Achievement levels, participation and board student groups.</div></div><div class="timeline-row"><strong>Earlier</strong><div class="coverage-stripe gap">No earlier complete province-wide raw download was located in the current public catalogues. Older reports exist. Additional historical data requires a separate search or an <a href="${sourceUrl}" target="_blank" rel="noopener">EQAO data request</a>.</div></div></section><section class="panel prose"><h2>How to read the results</h2><p><strong>Provincial standard:</strong> Level 3 or 4. This is the percentage of students meeting the standard, not an average test mark.</p><p><strong>Current series:</strong> values come directly from EQAO’s published <code>pctOverallR/W/M_L34</code> fields for fully participating students. No school averaging is used for official board or Ontario results.</p><p><strong>Compare like with like:</strong> English- and French-language systems have separate benchmarks. The board-type filter changes the board list, not the provincial benchmark. “All district boards” excludes other authorities and provincial schools from the list.</p><p><strong>Changes:</strong> year changes use percentage points between published rounded percentages. Small differences may reflect rounding. These are repeated annual cohorts, not individual student progress or a measure of a board’s causal effect.</p></section></div><section class="panel prose" style="margin-bottom:20px"><h2>Method and limitations</h2><details open><summary>Gaps, suppressed values and comparability</summary><p>N/R and S. R. identify suppressed small groups. N/D and A/D identify no data. W means withheld. NA means not applicable. Bounded values such as &lt;1% remain text and are not plotted as exact values. None are replaced with zero or reconstructed from counts.</p><p>EQAO warns that 2021–22 CSV results may differ from its interactive dashboards. The historical school workbooks use their own published basis and lack grade-specific denominators. The historical board summaries are explicitly unweighted school means and cannot substitute for official board results. Older and current assessment series are not joined by a trend line.</p></details><details><summary>Processing and provenance</summary><p>Original ZIP and XLSX files are preserved with source URLs, byte sizes and SHA-256 hashes. All CSV parts are extracted locally. Charts use the first achievement CSV; published student-group percentages are joined from the second CSV by organisation type, ID and language. Only suppression-applied public records are used.</p><p>English and French Ontario workbook editions are language translations, each containing both school systems. Only the English edition is parsed to avoid duplication. The 2024–25 workbook supplies board type and school city labels. Current EQAO names and identifiers take precedence. A missing board classification is labelled “Other authority.”</p><p>Each numeric current-series achievement percentage was checked against its source numerator and fully participating denominator within half a percentage point. Source keys were checked for duplicates. <a href="data/sources.json" download>Download the source manifest</a>.</p></details><details><summary>What the source archive contains</summary><p>All ten Grade 3/6 achievement ZIPs from 2021–22 through 2025–26, five annual aggregate field-definition workbooks, and all sixteen English/French school-information workbooks currently listed by Ontario (2017–18 through 2024–25). Questionnaire datasets are not included: this application focuses on achievement results.</p><p>School locations are contextual metadata, not geographic attendance boundaries. School composition, participation, curriculum and assessment changes can affect comparisons. No composite score or school-quality ranking is calculated.</p></details></section><section class="panel"><div class="panel-head"><div><h2>Download and inspect the data</h2><p>Original files are available here as well as on the publishers’ websites.</p></div><a class="button secondary" href="data/board-results.csv" download>All board results · CSV</a></div><p class="small"><a href="${sourceUrl}" target="_blank" rel="noopener">EQAO Open Data</a> · <a href="https://data.ontario.ca/dataset/school-information-and-student-demographics" target="_blank" rel="noopener">Ontario Data Catalogue</a> · <a href="https://www.ontario.ca/page/open-government-licence-ontario" target="_blank" rel="noopener">Open Government Licence – Ontario</a></p><ul class="source-list">${data.sources.map(s=>`<li><a href="downloads/${encodeURIComponent(s.path.split('/').pop())}" download>${esc(s.path.split('/').pop())}</a><small>${esc(s.publisher)} · ${(s.bytes/1e6).toFixed(2)} MB · <a href="${esc(s.url)}" target="_blank" rel="noopener">Publisher’s original</a></small></li>`).join('')}</ul></section>`;
+  const sourceCount=category=>data.sources.filter(s=>s.category===category).length;
+  const sourceBytes=data.sources.reduce((total,s)=>total+s.bytes,0);
+  $('#content').innerHTML=`<div class="cards">${card('Original source files',number(data.sources.length),`${sourceCount('achievement')} result archives · ${sourceCount('definitions')} dictionaries · ${sourceCount('school-information')} workbooks`,true)}${card('Raw source size',`${(sourceBytes/1e6).toFixed(1)} <small>MB</small>`,'Publisher originals, preserved verbatim')}${card('Earliest located','2017–18','School results in Ontario’s current catalogue')}${card('Latest available','2025–26','Grade 3 and Grade 6 EQAO results')}</div><div class="coverage-grid"><section class="panel"><h2>What is available</h2><div class="timeline-row"><strong>2017–19</strong><div class="coverage-stripe legacy">Two historical school years. Grade 3 and Grade 6 reading, writing and mathematics. English and French schools.</div></div><div class="timeline-row"><strong>2019–21</strong><div class="coverage-stripe gap">No new Grade 3/6 results included. Ontario’s 2019–20 and 2020–21 files repeat the 2018–19 assessment results; archived but not counted again.</div></div><div class="timeline-row"><strong>2021–26</strong><div class="coverage-stripe">Five school years of official EQAO board, school and language-system provincial results. Achievement levels, participation and board student groups.</div></div><div class="timeline-row"><strong>Earlier</strong><div class="coverage-stripe gap">No earlier complete province-wide raw download was located in the current public catalogues. Older reports exist. Additional historical data requires a separate search or an <a href="${sourceUrl}" target="_blank" rel="noopener">EQAO data request</a>.</div></div></section><section class="panel prose"><h2>How to read the results</h2><p><strong>Provincial standard:</strong> Level 3 or 4. This is the percentage of students meeting the standard, not an average test mark.</p><p><strong>Current series:</strong> values come directly from EQAO’s published <code>pctOverallR/W/M_L34</code> fields for fully participating students. No school averaging is used for official board or Ontario results.</p><p><strong>Compare like with like:</strong> English- and French-language systems have separate benchmarks. The board-type filter changes the board list, not the provincial benchmark. “All district boards” excludes other authorities and provincial schools from the list.</p><p><strong>Changes:</strong> year changes use percentage points between published rounded percentages. Small differences may reflect rounding. These are repeated annual cohorts, not individual student progress or a measure of a board’s causal effect.</p></section></div><section class="panel prose" style="margin-bottom:20px"><h2>Method and limitations</h2><details open><summary>Gaps, suppressed values and comparability</summary><p>N/R and S. R. identify suppressed small groups. N/D and A/D identify no data. W means withheld. NA means not applicable. Bounded values such as &lt;1% remain text and are not plotted as exact values. None are replaced with zero or reconstructed from counts.</p><p>EQAO warns that 2021–22 CSV results may differ from its interactive dashboards. The historical school workbooks use their own published basis and lack grade-specific denominators. The historical board summaries are explicitly unweighted school means and cannot substitute for official board results. Older and current assessment series are not joined by a trend line.</p></details><details><summary>Processing and provenance</summary><p>Original ZIP and XLSX files are preserved with source URLs, byte sizes and SHA-256 hashes. All CSV parts are extracted locally. Charts use the first achievement CSV; published student-group percentages are joined from the second CSV by organisation type, ID and language. Only suppression-applied public records are used.</p><p>English and French Ontario workbook editions are language translations, each containing both school systems. Only the English edition is parsed to avoid duplication. The 2024–25 workbook supplies board type and school city labels. Current EQAO names and identifiers take precedence. A missing board classification is labelled “Other authority.”</p><p>Each numeric current-series achievement percentage was checked against its source numerator and fully participating denominator within half a percentage point. Source keys were checked for duplicates. <a href="data/sources.json" download>Download the source manifest</a> · <a href="data/audit.json" download>All-school source audit</a> · <a href="data/calculation-audit.json" download>Calculation audit</a> · <a href="data/publisher-audit.json" download>Publisher-file verification</a>.</p></details><details><summary>What the source archive contains</summary><p>All ten Grade 3/6 achievement ZIPs from 2021–22 through 2025–26, five annual aggregate field-definition workbooks, and all sixteen English/French school-information workbooks currently listed by Ontario (2017–18 through 2024–25). Questionnaire datasets are not included: this application focuses on achievement results.</p><p>School locations are contextual metadata, not geographic attendance boundaries. School composition, participation, curriculum and assessment changes can affect comparisons. School trends ranks descriptive annual changes, with an optional equal-weight mean across subjects; it is not a school-quality ranking.</p></details></section><section class="panel"><div class="panel-head"><div><h2>Download and inspect the data</h2><p>Original files are available here as well as on the publishers’ websites.</p></div><a class="button secondary" href="data/board-results.csv" download>All board results · CSV</a></div><p class="small"><a href="${sourceUrl}" target="_blank" rel="noopener">EQAO Open Data</a> · <a href="https://data.ontario.ca/dataset/school-information-and-student-demographics" target="_blank" rel="noopener">Ontario Data Catalogue</a> · <a href="https://www.ontario.ca/page/open-government-licence-ontario" target="_blank" rel="noopener">Open Government Licence – Ontario</a></p><ul class="source-list">${data.sources.map(s=>`<li><a href="downloads/${encodeURIComponent(s.path.split('/').pop())}" download>${esc(s.path.split('/').pop())}</a><small>${esc(s.publisher)} · ${(s.bytes/1e6).toFixed(2)} MB · <a href="${esc(s.url)}" target="_blank" rel="noopener">Publisher’s original</a></small></li>`).join('')}</ul></section>`;
+}
+function csvCell(v){
+  let s=String(v??'');
+  // Escape formula-like text while preserving signed numeric calculations.
+  if(typeof v==='string'&&/^[=+@\-]/.test(s))s="'"+s;
+  return '"'+s.replaceAll('"','""')+'"';
 }
 function exportCSV(){
   if(!exportRows.length){toast('There are no matching rows to export.');return}
-  const fields=Object.keys(exportRows[0]),quote=v=>{let s=String(v??'');if(/^[=+@\-]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"'};
-  const text='\ufeff'+[fields.map(quote).join(','),...exportRows.map(r=>fields.map(k=>quote(r[k])).join(','))].join('\r\n');
+  const fields=Object.keys(exportRows[0]);
+  const text='\ufeff'+[fields.map(csvCell).join(','),...exportRows.map(r=>fields.map(k=>csvCell(r[k])).join(','))].join('\r\n');
   const url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=`eqao-${state.view}-grade${state.grade}-${state.year}-${state.language}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`Exported ${exportRows.length} matching rows.`);
 }
 $('#views').onclick=e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view)};

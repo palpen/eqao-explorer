@@ -17,8 +17,8 @@ async function choose(id){
   await page.locator(`[data-pick-school="${id}"]`).click();await waitSchool();
   await page.waitForFunction(id=>document.querySelector('#section-label').textContent.includes(id),id);
 }
-await page.goto(base);await page.locator('.welcome-panel').waitFor();
-assert.match(await page.locator('#page-title').textContent(),/Start with your school/);
+await page.goto(base);await page.locator('#trend-subject').waitFor();
+assert.match(await page.locator('#page-title').textContent(),/Where are results moving/);
 assert.equal(await page.locator('#school-picker-search').isVisible(),false,'School search starts collapsed');
 assert.equal(await page.locator('#school-change-label').textContent(),'Choose school');
 await page.locator('#chosen-school-label').click();
@@ -35,7 +35,7 @@ await picker.press('ArrowUp');assert.equal(await picker.getAttribute('aria-activ
 await picker.press('Escape');assert.equal(await picker.getAttribute('aria-expanded'),'false');
 await picker.press('ArrowDown');assert.equal(await picker.getAttribute('aria-expanded'),'true');
 await picker.fill('No such Ontario school at all');assert.match(await page.locator('#picker-count').textContent(),/No schools found/);
-await picker.press('Enter');assert.match(await page.locator('#page-title').textContent(),/Start with your school/);
+await picker.press('Enter');assert.match(await page.locator('#page-title').textContent(),/Where are results moving/);
 await picker.fill('');assert.equal(await page.locator('#school-picker-results').isVisible(),false);
 await page.locator('#school-picker-search').fill('123838');await page.keyboard.press('Enter');await waitSchool();
 const school=latest.find(s=>s.id==='123838'),old=older.find(s=>s.id===school.id),province=core.province.find(r=>r.year===2026&&r.grade===3&&r.language==='en');
@@ -49,7 +49,7 @@ assert.ok(stickyTop>=-1&&stickyTop<=1,'Selected school controls persist at the t
 await page.locator('#chosen-school-label').click();assert.equal(await picker.isVisible(),true);
 await page.locator('#chosen-school-label').click();assert.equal(await picker.isVisible(),false);
 await page.evaluate(()=>scrollTo(0,0));
-const schoolStrokes=await Promise.all([0,1,2].map(i=>page.locator(`#school-chart-${i} .trend-line[data-series="My school"]`).getAttribute('stroke')));
+const schoolStrokes=await Promise.all([0,1,2].map(i=>page.locator(`#school-chart-${i} .trend-line[data-series="Selected school"]`).getAttribute('stroke')));
 assert.equal(new Set(schoolStrokes).size,3,'Each subject has its own time-series colour');
 for(let i=0;i<3;i++){
   const card=page.locator(`[data-overview-subject="${i}"]`);
@@ -76,7 +76,7 @@ const peerId=await page.locator('[data-compare-school]').first().getAttribute('d
 await page.locator(`[data-compare-school="${peerId}"]`).click();
 assert.equal(await page.locator('#comparison-chips [data-remove-peer]').count(),1);
 assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),4);
-assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series="My school"]').getAttribute('stroke'),schoolStrokes[0]);
+assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series="Selected school"]').getAttribute('stroke'),schoolStrokes[0]);
 assert.equal(await page.locator('[data-overview-subject="0"] .card-benchmarks').textContent(),initialOntario);
 assert.equal(await page.locator('#relative-progress tbody tr').count(),3);
 await page.locator('#line-board').uncheck();assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),3);
@@ -95,6 +95,7 @@ await page.locator('#near-search').fill('No such school at all');assert.match(aw
 // Export includes saved peers even if they are outside the displayed comparison radius/type.
 const downloadWait=page.waitForEvent('download');await page.locator('#export').click();const download=await downloadWait;await download.saveAs(root+'/tests/school-export.csv');
 const csv=await fs.readFile(root+'/tests/school-export.csv','utf8');assert.match(csv,/Selected comparison/);assert.ok(csv.includes(peerId));assert.match(csv,/fully_participating_students/);
+assert.doesNotMatch(csv,/"'-\d/, 'Negative numeric changes remain numeric in exported CSV');
 await page.goto(base);await waitSchool();assert.equal(await page.locator('#page-title').textContent(),school.name);
 assert.equal(await page.locator('#school-picker-search').isVisible(),false,'Reloaded saved school keeps search hidden');
 assert.equal(await page.locator('#comparison-chips [data-remove-peer]').count(),1);assert.equal(await page.locator('#near-radius').inputValue(),'1');
@@ -107,8 +108,8 @@ const g6=JSON.parse(await fs.readFile(root+'/site/data/schools-2026-6.json','utf
 assert.equal(await page.locator('[data-overview-subject="2"] .stat').textContent(),pct(g6.values[2]));
 await page.locator('[data-home-grade="3"]').click();await waitSchool();
 await page.locator('[data-expand-subject="1"]').click();await page.locator('#expanded-school-chart svg').waitFor();
-assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series="My school"]').getAttribute('stroke'),schoolStrokes[1]);
-await page.locator('#expanded-school-chart circle').first().focus();await page.keyboard.press('Enter');assert.match(await page.locator('#expanded-school-readout').textContent(),/My school.*2021–22/);
+assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series="Selected school"]').getAttribute('stroke'),schoolStrokes[1]);
+await page.locator('#expanded-school-chart circle').first().focus();await page.keyboard.press('Enter');assert.match(await page.locator('#expanded-school-readout').textContent(),/Selected school.*2021–22/);
 for(const width of [1024,390,320]){
   await page.setViewportSize({width,height:900});await page.waitForTimeout(200);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`School dashboard fits ${width}px`);
@@ -136,6 +137,8 @@ assert.match(await page.locator('#school-conversations').textContent(),/Relative
 await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:root+'/tests/malvern-school-header.png'});
 await page.locator('#school-trends').screenshot({path:root+'/tests/subject-colours.png'});
 await choose('649653');assert.deepEqual(await page.locator('.subject-card .stat').allTextContents(),['No result','No result','No result']);assert.equal(await page.locator('#near-radius').isDisabled(),true);assert.match(await page.locator('#nearby-description').textContent(),/Coordinates and city are unavailable/);
+assert.match(await page.locator('#achievement-context').textContent(),/Ontario school-location source unavailable/);
+assert.equal(await page.locator('#achievement-context a').filter({hasText:'Ontario school-location source'}).count(),0,'No invented location-source link');
 await choose('023549');assert.match(await page.locator('#page-description').textContent(),/French-language/);
 const french=latest.find(s=>s.id==='023549'),fp=core.province.find(r=>r.year===2026&&r.grade===3&&r.language==='fr');
 assert.equal(await page.locator('[data-overview-subject="0"] .card-gap').textContent(),pp(french.values[0]-fp.values[0])+' vs Ontario');assert.match(await page.locator('#nearby-description').textContent(),/French-language/);
@@ -150,7 +153,7 @@ const interpretations=await page.evaluate(()=>{
 assert.equal(interpretations.slow.annual,-6);assert.equal(interpretations.fast.annual,6);assert.equal(interpretations.gap.annual,null);assert.equal(interpretations.gap.direction,'unknown');assert.equal(interpretations.incomplete.length,0);assert.equal(interpretations.oneYear.length,0);assert.match(interpretations.declining[0].title,/two consecutive annual changes/);assert.ok(Math.abs(interpretations.distance-111.195)<.01);
 // Failed downloads expose retry.
 const mobilePicker=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
-await mobilePicker.goto(base);await mobilePicker.locator('.welcome-panel').waitFor();
+await mobilePicker.goto(base);await mobilePicker.locator('#trend-subject').waitFor();
 assert.equal(await mobilePicker.locator('#school-picker-search').isVisible(),false);
 await mobilePicker.locator('#chosen-school-label').click();
 await mobilePicker.locator('#school-picker-search').fill('Woodbridge');

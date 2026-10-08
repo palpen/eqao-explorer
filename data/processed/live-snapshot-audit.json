@@ -1,0 +1,133 @@
+{
+  "url": "https://eqao-explorer.vercel.app/",
+  "passed": true,
+  "datasetsChecked": 18,
+  "files": [
+    {
+      "path": "data/schools-2022-6.json",
+      "matched": true,
+      "remoteSHA256": "54871f2218c2a9eb74119cd63e8a36c64119510b6c667a7d7bc56af135015a3a",
+      "localSHA256": "54871f2218c2a9eb74119cd63e8a36c64119510b6c667a7d7bc56af135015a3a",
+      "error": null
+    },
+    {
+      "path": "data/schools-2018-6.json",
+      "matched": true,
+      "remoteSHA256": "19689c224b9fcc36da04d37368cab32ea769a0dcf987c9c3408a408e3a840355",
+      "localSHA256": "19689c224b9fcc36da04d37368cab32ea769a0dcf987c9c3408a408e3a840355",
+      "error": null
+    },
+    {
+      "path": "data/sources.json",
+      "matched": true,
+      "remoteSHA256": "4d6bd4ee109aefa6b9ba59df02c0df21dd7ecaaef8ba72c91f7bd81ebcfefe1d",
+      "localSHA256": "4d6bd4ee109aefa6b9ba59df02c0df21dd7ecaaef8ba72c91f7bd81ebcfefe1d",
+      "error": null
+    },
+    {
+      "path": "data/schools-index.json",
+      "matched": true,
+      "remoteSHA256": "6c86aa289180131ea7929d7442d2f1b5eee2a2b6bc2470d15728b480f1ceb058",
+      "localSHA256": "6c86aa289180131ea7929d7442d2f1b5eee2a2b6bc2470d15728b480f1ceb058",
+      "error": null
+    },
+    {
+      "path": "data/schools-2019-3.json",
+      "matched": true,
+      "remoteSHA256": "10ec8b3714f608d5345454c5f169f1b1aa0c70c0764568d79a47deb61bf2aa1b",
+      "localSHA256": "10ec8b3714f608d5345454c5f169f1b1aa0c70c0764568d79a47deb61bf2aa1b",
+      "error": null
+    },
+    {
+      "path": "data/schools-2023-3.json",
+      "matched": true,
+      "remoteSHA256": "0e9647f69688ad0c61093fda4e300059a5a2c805ed3ab49192fdab087dcd6115",
+      "localSHA256": "0e9647f69688ad0c61093fda4e300059a5a2c805ed3ab49192fdab087dcd6115",
+      "error": null
+    },
+    {
+      "path": "data/schools-2024-6.json",
+      "matched": true,
+      "remoteSHA256": "60ab66426b5d30503e45ead4eb4881cd33a757d7ff3b7bd2d2f397f47c77368f",
+      "localSHA256": "60ab66426b5d30503e45ead4eb4881cd33a757d7ff3b7bd2d2f397f47c77368f",
+      "error": null
+    },
+    {
+      "path": "data/schools-2025-3.json",
+      "matched": true,
+      "remoteSHA256": "1ea06d6175f77f1f8890c614ed0cb8906f903e9a96f6ef1dc265c20d45db41aa",
+      "localSHA256": "1ea06d6175f77f1f8890c614ed0cb8906f903e9a96f6ef1dc265c20d45db41aa",
+      "error": null
+    },
+    {
+      "path": "data/schools-2026-6.json",
+      "matched": true,
+      "remoteSHA256": "27122e2bf8b039c2c35009d33a64e890a4d5387bc89cf3c01cd0315e2eb52d2b",
+      "localSHA256": "27122e2bf8b039c2c35009d33a64e890a4d5387bc89cf3c01cd0315e2eb52d2b",
+      "error": null
+    },
+    {
+      "path": "data/board-results.csv",
+      "matched": true,
+      "remoteSHA256": "8649d79facd98ed5d3ee43c2d53a6c252fd96f32dd66fe06708e56ef5d3ab4fd",
+      "localSHA256": "8649d79facd98ed5d3ee43c2d53a6c252fd96f32dd66fe06708e56ef5d3ab4fd",
+      "error": null
+    },
+    {
+      "path": "data/schools-2019-6.json",
+      "matched": true,
+      "remoteSHA256": "599f51d3ff43b71aacc466bd729472a83bb1b70aacf8b4ece62daf07b835332d",
+      "localSHA256": "599f51d3ff43b71aacc466bd729472a83bb1b70aacf8b4ece62daf07b835332d",
+      "error": null
+    },
+    {
+      "path": "data/core.json",
+      "matched": true,
+      "remoteSHA256": "f69bf5ad5def7a81c9a5006341bc83abe1dc04b4dabd3a49f8488d60a2159722",
+      "localSHA256": "f69bf5ad5def7a81c9a5006341bc83abe1dc04b4dabd3a49f8488d60a2159722",
+      "error": null
+    },
+    {
+      "path": "data/schools-2023-6.json",
+      "matched": true,
+      "remoteSHA256": "7ba37716b35068779855d2d17b9578723dead9d02887e99d87ea8d03d43e23b7",
+      "localSHA256": "7ba37716b35068779855d2d17b9578723dead9d02887e99d87ea8d03d43e23b7",
+      "error": null
+    },
+    {
+      "path": "data/schools-2022-3.json",
+      "matched": true,
+      "remoteSHA256": "03041f40932209b601d3495d088a6463fe3c94b6ea25d44d8c2d76378e7aa6ae",
+      "localSHA256": "03041f40932209b601d3495d088a6463fe3c94b6ea25d44d8c2d76378e7aa6ae",
+      "error": null
+    },
+    {
+      "path": "data/schools-2018-3.json",
+      "matched": true,
+      "remoteSHA256": "68d0299cdb32c74173c43f562601ca005375278ac4d5d05a93bf02eb5fec5d5b",
+      "localSHA256": "68d0299cdb32c74173c43f562601ca005375278ac4d5d05a93bf02eb5fec5d5b",
+      "error": null
+    },
+    {
+      "path": "data/schools-2025-6.json",
+      "matched": true,
+      "remoteSHA256": "3e84f2a686a8542b32f09f5a41b6255c581afed34f68fb04485390cb18951fc8",
+      "localSHA256": "3e84f2a686a8542b32f09f5a41b6255c581afed34f68fb04485390cb18951fc8",
+      "error": null
+    },
+    {
+      "path": "data/schools-2026-3.json",
+      "matched": true,
+      "remoteSHA256": "1a264abc8cabf9cb529c12baf5846a73947fcfa912ab3569d20a7e7917e93a1a",
+      "localSHA256": "1a264abc8cabf9cb529c12baf5846a73947fcfa912ab3569d20a7e7917e93a1a",
+      "error": null
+    },
+    {
+      "path": "data/schools-2024-3.json",
+      "matched": true,
+      "remoteSHA256": "3ff720dc9e8798006f9d38ed50a13dd6e98b529d7cb8430eafbe8c7d2ea9e36e",
+      "localSHA256": "3ff720dc9e8798006f9d38ed50a13dd6e98b529d7cb8430eafbe8c7d2ea9e36e",
+      "error": null
+    }
+  ]
+}

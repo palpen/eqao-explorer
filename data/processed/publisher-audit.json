@@ -1,0 +1,288 @@
+{
+  "passed": true,
+  "checkedAtUTC": "2026-10-07T03:27:47.609069+00:00",
+  "matchedFiles": 31,
+  "totalFiles": 31,
+  "files": [
+    {
+      "file": "G36_2026_Aggregate_Field_Definitions.xlsx",
+      "url": "https://www.eqao.com/wp-content/uploads/2026/10/G36_2026_Aggregate_Field_Definitions.xlsx",
+      "expectedSHA256": "eec3ebab95afad0590821cff1d514b0bbb0e71d93ef35021b3d0b09960aecb77",
+      "available": true,
+      "passed": true,
+      "bytes": 115898,
+      "sha256": "eec3ebab95afad0590821cff1d514b0bbb0e71d93ef35021b3d0b09960aecb77"
+    },
+    {
+      "file": "Grade-3-2025-2026-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2026/10/Grade-3-2025-2026-Achievement-Results.zip",
+      "expectedSHA256": "423adc7bca96a80e67a44157077d82dc45918f3ac7648f28a2866a860f53fca2",
+      "available": true,
+      "passed": true,
+      "bytes": 3653500,
+      "sha256": "423adc7bca96a80e67a44157077d82dc45918f3ac7648f28a2866a860f53fca2"
+    },
+    {
+      "file": "G36_2025_Aggregate_Field_Definitions.xlsx",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/11/G36_2025_Aggregate_Field_Definitions.xlsx",
+      "expectedSHA256": "0584a2acb33dc4f512dc5383fd7c3a7ddb0073b1a16bad1759a27f44f4dab374",
+      "available": true,
+      "passed": true,
+      "bytes": 114756,
+      "sha256": "0584a2acb33dc4f512dc5383fd7c3a7ddb0073b1a16bad1759a27f44f4dab374"
+    },
+    {
+      "file": "Grade-3-2024-2025-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/11/Grade-3-2024-2025-Achievement-Results.zip",
+      "expectedSHA256": "4599d369a9261e1c0381c3609453ebdc94a46e58938019d90c719ae285345668",
+      "available": true,
+      "passed": true,
+      "bytes": 607003,
+      "sha256": "4599d369a9261e1c0381c3609453ebdc94a46e58938019d90c719ae285345668"
+    },
+    {
+      "file": "G36_2024_Aggregate_Field_Definitions.xlsx",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/G36_2024_Aggregate_Field_Definitions.xlsx",
+      "expectedSHA256": "7f624603722831148207abee994e61efe201143fb6ac730b4da6ae6dbb190716",
+      "available": true,
+      "passed": true,
+      "bytes": 114672,
+      "sha256": "7f624603722831148207abee994e61efe201143fb6ac730b4da6ae6dbb190716"
+    },
+    {
+      "file": "Grade-3-2023-2024-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/Grade-3-2023-2024-Achievement-Results.zip",
+      "expectedSHA256": "0584ed8bbc71d6a58c80485ecbd4cce2b7f1708152ffb6ac2a890657c71227f2",
+      "available": true,
+      "passed": true,
+      "bytes": 583834,
+      "sha256": "0584ed8bbc71d6a58c80485ecbd4cce2b7f1708152ffb6ac2a890657c71227f2"
+    },
+    {
+      "file": "G36_2023_Aggregate_Field_Definitions.xlsx",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/G36_2023_Aggregate_Field_Definitions.xlsx",
+      "expectedSHA256": "3db0ee9e0218d4744f82ae352ee5237952fc12811a1eb63ae40951051dab1887",
+      "available": true,
+      "passed": true,
+      "bytes": 186808,
+      "sha256": "3db0ee9e0218d4744f82ae352ee5237952fc12811a1eb63ae40951051dab1887"
+    },
+    {
+      "file": "Grade-3-2022-2023-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/Grade-3-2022-2023-Achievement-Results.zip",
+      "expectedSHA256": "751a8ed806e6218b833f3d51b65d97961b1386c2f0bb87e79728e34d7390f057",
+      "available": true,
+      "passed": true,
+      "bytes": 587698,
+      "sha256": "751a8ed806e6218b833f3d51b65d97961b1386c2f0bb87e79728e34d7390f057"
+    },
+    {
+      "file": "G36_2022_Aggregate_Field_Definitions.xlsx",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/G36_2022_Aggregate_Field_Definitions.xlsx",
+      "expectedSHA256": "7dfcde886864ffb7ec40eab5f8faa38f2ff6f60e4470c59968b19edc458af3a4",
+      "available": true,
+      "passed": true,
+      "bytes": 151202,
+      "sha256": "7dfcde886864ffb7ec40eab5f8faa38f2ff6f60e4470c59968b19edc458af3a4"
+    },
+    {
+      "file": "Grade-3-2021-2022-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/Grade-3-2021-2022-Achievement-Results.zip",
+      "expectedSHA256": "f7b8b3bd46d5f3369530f9fe788a055a582ff602c1329c394856f47ecfbd0d46",
+      "available": true,
+      "passed": true,
+      "bytes": 543941,
+      "sha256": "f7b8b3bd46d5f3369530f9fe788a055a582ff602c1329c394856f47ecfbd0d46"
+    },
+    {
+      "file": "Grade-6-2025-2026-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2026/09/Grade-6-2025-2026-Achievement-Results.zip",
+      "expectedSHA256": "07012985baedfa8a5f3e220147e6c21a58c6b25586e6cbb99cd5d72f36c11c3e",
+      "available": true,
+      "passed": true,
+      "bytes": 3458906,
+      "sha256": "07012985baedfa8a5f3e220147e6c21a58c6b25586e6cbb99cd5d72f36c11c3e"
+    },
+    {
+      "file": "Grade-6-2024-2025-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/11/Grade-6-2024-2025-Achievement-Results.zip",
+      "expectedSHA256": "588cdb23e37c671db903262690d6cc1d295a876a140705d99691c020f2e3b958",
+      "available": true,
+      "passed": true,
+      "bytes": 598326,
+      "sha256": "588cdb23e37c671db903262690d6cc1d295a876a140705d99691c020f2e3b958"
+    },
+    {
+      "file": "Grade-6-2023-2024-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/Grade-6-2023-2024-Achievement-Results.zip",
+      "expectedSHA256": "b3afc8cbb497eaaf6f8993258926f4309e062c91d59781751270490a0cd2de35",
+      "available": true,
+      "passed": true,
+      "bytes": 583792,
+      "sha256": "b3afc8cbb497eaaf6f8993258926f4309e062c91d59781751270490a0cd2de35"
+    },
+    {
+      "file": "Grade-6-2022-2023-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/Grade-6-2022-2023-Achievement-Results.zip",
+      "expectedSHA256": "5d5db48fb8a14fe52e900c134358fb19f67e35125a256c8de4f93c8390a84e0a",
+      "available": true,
+      "passed": true,
+      "bytes": 576291,
+      "sha256": "5d5db48fb8a14fe52e900c134358fb19f67e35125a256c8de4f93c8390a84e0a"
+    },
+    {
+      "file": "Grade-6-2021-2022-Achievement-Results.zip",
+      "url": "https://www.eqao.com/wp-content/uploads/2025/06/Grade-6-2021-2022-Achievement-Results.zip",
+      "expectedSHA256": "66182dc74b91e5a904efe2494c0472d3395d2cf3e91db3b9efc8389241a30e8a",
+      "available": true,
+      "passed": true,
+      "bytes": 544868,
+      "sha256": "66182dc74b91e5a904efe2494c0472d3395d2cf3e91db3b9efc8389241a30e8a"
+    },
+    {
+      "file": "sif_data_table_2019_2020_en.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/602a5186-67f5-4faf-94f3-7c61ffc4719a/download/sif_data_table_2019_2020_en.xlsx",
+      "expectedSHA256": "7491816f1ae73b5a38c0e657053a282d3be39b409e1b55e32310da54f433aa76",
+      "available": true,
+      "passed": true,
+      "bytes": 1567330,
+      "sha256": "7491816f1ae73b5a38c0e657053a282d3be39b409e1b55e32310da54f433aa76"
+    },
+    {
+      "file": "sif_data_table_2019_2020_fr.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/4c4706e9-e704-4ee7-ad93-d17d4cae268b/download/sif_data_table_2019_2020_fr.xlsx",
+      "expectedSHA256": "c92f2cdcc213c7fd8eb25e2d2ca4e34bea03f9f21cef05332517273c69c12e32",
+      "available": true,
+      "passed": true,
+      "bytes": 1580734,
+      "sha256": "c92f2cdcc213c7fd8eb25e2d2ca4e34bea03f9f21cef05332517273c69c12e32"
+    },
+    {
+      "file": "sif_data_table_2018_2019_en.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/bbbac037-b1c9-4b32-8f67-4fed1dfcac06/download/sif_data_table_2018_2019_en.xlsx",
+      "expectedSHA256": "436e229c11b48bf9153f55ef54360db05fe1e708fd3b508ad3893c12305296fd",
+      "available": true,
+      "passed": true,
+      "bytes": 1550796,
+      "sha256": "436e229c11b48bf9153f55ef54360db05fe1e708fd3b508ad3893c12305296fd"
+    },
+    {
+      "file": "sif_data_table_2017_2018_en.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/3d8e7824-d033-4ca5-a5de-aa0dbec99002/download/sif_data_table_2017_2018_en.xlsx",
+      "expectedSHA256": "d5050bf5d848d021e88a2cacac2acf1362267089ef8759a2bd9b85bdcd78e9ed",
+      "available": true,
+      "passed": true,
+      "bytes": 1565910,
+      "sha256": "d5050bf5d848d021e88a2cacac2acf1362267089ef8759a2bd9b85bdcd78e9ed"
+    },
+    {
+      "file": "sif_data_table_2018_2019_fr.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/71f59e97-623e-4cf3-8d4b-9db1107244a2/download/sif_data_table_2018_2019_fr.xlsx",
+      "expectedSHA256": "212d06f1dcf9899ab2ddd3b754451bb950efa73a48d967c4fe39e57de76ba6aa",
+      "available": true,
+      "passed": true,
+      "bytes": 1566878,
+      "sha256": "212d06f1dcf9899ab2ddd3b754451bb950efa73a48d967c4fe39e57de76ba6aa"
+    },
+    {
+      "file": "sif_data_table_2017_2018_fr.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/426a2b30-abe5-4742-828d-4cc5cb04bbfa/download/sif_data_table_2017_2018_fr.xlsx",
+      "expectedSHA256": "6a03e414eec3d7e863784f667155fe34a3ce428e3a5334d94f6a077547a3657a",
+      "available": true,
+      "passed": true,
+      "bytes": 1565304,
+      "sha256": "6a03e414eec3d7e863784f667155fe34a3ce428e3a5334d94f6a077547a3657a"
+    },
+    {
+      "file": "sif_data_table_2020_2021_en.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/600ab128-f50f-43a4-b4d4-97c39bb270b6/download/sif_data_table_2020_2021_en.xlsx",
+      "expectedSHA256": "e66994db3f2202b858a030615c8557669ccfdca62a9772429f1d25f8b4190723",
+      "available": true,
+      "passed": true,
+      "bytes": 1547704,
+      "sha256": "e66994db3f2202b858a030615c8557669ccfdca62a9772429f1d25f8b4190723"
+    },
+    {
+      "file": "sif_data_table_2020_2021_fr.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/57ef878c-b0b8-4e2c-a94c-66f32b4c8225/download/sif_data_table_2020_2021_fr.xlsx",
+      "expectedSHA256": "ade93fbaa32125d4180157abef7dd3a5a4a22544b7ef2b73362bfbae8bc622c8",
+      "available": true,
+      "passed": true,
+      "bytes": 1562805,
+      "sha256": "ade93fbaa32125d4180157abef7dd3a5a4a22544b7ef2b73362bfbae8bc622c8"
+    },
+    {
+      "file": "sif_data_table_2021_2022_en.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/e0e90bd5-d662-401a-a6d2-60d69ac89d14/download/sif_data_table_2021_2022_en.xlsx",
+      "expectedSHA256": "b0807a5a9ac93ce4da745ddaedf540db8431178086b751d574a543ebc72b1789",
+      "available": true,
+      "passed": true,
+      "bytes": 1462006,
+      "sha256": "b0807a5a9ac93ce4da745ddaedf540db8431178086b751d574a543ebc72b1789"
+    },
+    {
+      "file": "sif_data_table_2021_2022_fr.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/e89ba892-b570-46c4-b1c5-4c401ca9c37f/download/sif_data_table_2021_2022_fr.xlsx",
+      "expectedSHA256": "5e1755920b218aa11c6ca098c644307802ec5085ecac1fd9a0fbe2b53ef33cbf",
+      "available": true,
+      "passed": true,
+      "bytes": 1459001,
+      "sha256": "5e1755920b218aa11c6ca098c644307802ec5085ecac1fd9a0fbe2b53ef33cbf"
+    },
+    {
+      "file": "sif_data_table_2022_2023_en.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/f95fc955-b1f0-4a2e-9b7f-cfa6eda37e0b/download/sif_data_table_2022_2023_en.xlsx",
+      "expectedSHA256": "f9ff68e0bc6cd74e8030571e934c713e737b88b89e3c82873b9714cb5775c41f",
+      "available": true,
+      "passed": true,
+      "bytes": 1460629,
+      "sha256": "f9ff68e0bc6cd74e8030571e934c713e737b88b89e3c82873b9714cb5775c41f"
+    },
+    {
+      "file": "sif_data_table_2022_2023_fr.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/8754224f-1b6a-43e9-87f3-47802909a0a8/download/sif_data_table_2022_2023_fr.xlsx",
+      "expectedSHA256": "2ff18ebbdbd49e864b245079e61880bb0a103e74b434e5c19561535ba69ae788",
+      "available": true,
+      "passed": true,
+      "bytes": 1462064,
+      "sha256": "2ff18ebbdbd49e864b245079e61880bb0a103e74b434e5c19561535ba69ae788"
+    },
+    {
+      "file": "new_sif_data_table_2023_24prelim_en_january2026.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/f381e1de-3aa8-4ae9-826a-20009a6f4a01/download/new_sif_data_table_2023_24prelim_en_january2026.xlsx",
+      "expectedSHA256": "3f31ae873780e500070258867704b4e278fad919ab4a8e9cdc11c20ce0318393",
+      "available": true,
+      "passed": true,
+      "bytes": 1539519,
+      "sha256": "3f31ae873780e500070258867704b4e278fad919ab4a8e9cdc11c20ce0318393"
+    },
+    {
+      "file": "new_sif_data_table_2023_24prelim_fr_january2026.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/a388b842-7f5a-4902-8f70-a11c23b33a82/download/new_sif_data_table_2023_24prelim_fr_january2026.xlsx",
+      "expectedSHA256": "8c2dcf76b3310919f4f2cab641ca5c5ffa73ed7d13c7af046434f12989258a51",
+      "available": true,
+      "passed": true,
+      "bytes": 1513232,
+      "sha256": "8c2dcf76b3310919f4f2cab641ca5c5ffa73ed7d13c7af046434f12989258a51"
+    },
+    {
+      "file": "new_sif_data_2024_25_final_en_august2026.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/f75540ed-59eb-49ab-ac43-976d563b3a65/download/new_sif_data_2024_25_final_en_august2026.xlsx",
+      "expectedSHA256": "26ec6231487ca83ad7f3b377961dcf133cbbbeda974a1175e0ac86c167286771",
+      "available": true,
+      "passed": true,
+      "bytes": 1502303,
+      "sha256": "26ec6231487ca83ad7f3b377961dcf133cbbbeda974a1175e0ac86c167286771"
+    },
+    {
+      "file": "new_sif_data_2024_25_finale_fr_august2026.xlsx",
+      "url": "https://data.ontario.ca/dataset/d85f68c5-fcb0-4b4d-aec5-3047db47dcd5/resource/5a7245d4-46a7-4bf9-8a37-af21a613254e/download/new_sif_data_2024_25_finale_fr_august2026.xlsx",
+      "expectedSHA256": "fee4b70b48c98c561ccb8adcdc612af24f2ecdc8316aa6ba67b4b1c8f4ef3dc4",
+      "available": true,
+      "passed": true,
+      "bytes": 1504156,
+      "sha256": "fee4b70b48c98c561ccb8adcdc612af24f2ecdc8316aa6ba67b4b1c8f4ef3dc4"
+    }
+  ],
+  "scope": "Fresh HTTPS downloads from the original official URLs; byte hashes compared with the preserved local snapshot. No originals modified."
+}

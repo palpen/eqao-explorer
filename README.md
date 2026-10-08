@@ -1,12 +1,12 @@
 # EQAO Explorer
 
-EQAO Explorer is a responsive dashboard built around **My child’s school**. Choose a school to understand its Grade 3 and Grade 6 reading, writing, and mathematics results, how they change over time, and how they compare with its board, Ontario, and selected schools nearby. The board explorer, historical archive, and original downloads remain available.
+EQAO Explorer is a responsive dashboard with a **Home** page that shows Ontario school trends until a school is selected. Choose a school to understand its Grade 3 and Grade 6 reading, writing, and mathematics results, how they change over time, and how they compare with its board, Ontario, and selected schools nearby. The board explorer, historical archive, and original downloads remain available.
 
 The app is static HTML, CSS, and JavaScript. It has no backend, database, account system, or API key requirement. The repository includes the prepared data and original source downloads, so you can run or deploy it immediately without rebuilding the dataset. This is an independent project, not an official EQAO reporting tool.
 
 ## What you can explore
 
-- A compact school control that stays at the top as you scroll. **Change school** opens a single search field with matching schools underneath; click or use the arrow keys and Enter to select a school. The search stays hidden during normal review. School, grade/year, and comparison choices are saved in your browser and can also be shared through the URL.
+- A compact school control that stays at the top as you scroll. **Change school** opens a single search field with matching schools underneath; click or use the arrow keys and Enter to select a school. The search stays hidden during normal review. **Clear school** removes the saved school and comparisons and returns Home to trends. School, grade/year, and comparison choices are saved in your browser and can also be shared through the URL. **School trends** remains available without clearing your selection; Home returns to the selected school. Browser Back and Forward restore the previous view and filters.
 - Three subject cards with published school, board and Ontario results, annual change, and the Ontario gap; a side-by-side grade overview.
 - Three trend charts on a consistent 0–100% scale, with blue for reading, terracotta for writing, and purple for mathematics; the same colours carry into expanded charts. Expand to compare with Ontario, the school’s board, and up to four chosen schools.
 - Relative progress: how the school’s gap changes against each benchmark or selected school, rather than just whether its own score rises.
@@ -17,9 +17,12 @@ The app is static HTML, CSS, and JavaScript. It has no backend, database, accoun
 - English- and French-language systems, public and Catholic district boards, and other authorities.
 - Board trends, provincial benchmarks, participation counts, subject profiles, published student-group results, and school histories.
 - Searchable, sortable tables and CSV exports of the current filtered board results.
+- A **School trends** tab with the ten largest annual increases and decreases, measured in percentage points, for reading, writing, mathematics or the equal-weight mean across all three. Grade, language, board, participant minimum and same-direction filters apply to ranks, summary statistics and CSV exports. Median change, direction shares, comparison coverage and a change distribution describe all eligible schools; each ranked row includes both years' results and participant counts.
 - Downloads of all 31 original publisher files, with source URLs and checksums.
 
 The data snapshot was retrieved on **6 October 2026**. There is no automatic refresh. Suppressed or missing results remain missing; the app does not estimate them. Historical school averages are not official board results and are kept separate from the current series. See [the methodology](docs/methodology.md) for coverage, definitions, and interpretation limits.
+
+The [full data and calculation audit](docs/data-audit.md) reconciles all **50,102 school records across 3,906 schools**, every board/Ontario record, participation and achievement-level fields, and all original download hashes. Fresh publisher downloads matched all 31 archived originals. The application’s calculations are checked across every current school, grade, subject and selected year. Source and calculation reports are downloadable in the Sources view.
 
 ## Quick start: run the app locally
 
@@ -103,6 +106,8 @@ On Windows PowerShell, use `curl.exe` for the download command to avoid older Po
 - `build_data.py` extracts achievement CSVs, normalizes records into `data/processed/` and `site/data/`, and copies original downloads into `site/downloads/`.
 - `tests/data.py` independently checks records against the original CSV/XLSX files and verifies download checksums.
 
+This source check writes `audit.json`, including per-school coverage and dataset hashes. Run `npm run test:calculations` after rebuilding to regenerate `calculation-audit.json`; it needs Node.js but no browser or server. Optional `python tests/publishers.py` downloads the 31 official files for fresh checksum comparison without replacing the snapshot, and writes `publisher-audit.json`.
+
 This process rebuilds the included snapshot; it does **not** discover new school years. Refreshing the dataset requires updating catalogue snapshots, source years, snapshot dates, coverage labels, and validation expectations together, then checking for publisher schema and methodology changes. Re-downloaded files may differ if a publisher revises them; compare the source manifest before accepting a refreshed snapshot.
 
 ## Deploy the app yourself
@@ -113,12 +118,29 @@ Publish **the contents of `site/`** as the web root. The deployed root must cont
 index.html
 app.js
 school.js
+trends.js
 style.css
 data/
 downloads/
 ```
 
 No build command or runtime dependencies are required. Keep both data folders: without `data/`, the dashboard cannot load results; without `downloads/`, original source links will fail. The app uses relative paths and can be served at a domain root or a subdirectory such as `/eqao-explorer/`.
+
+### Vercel
+
+Public dashboard: **https://eqao-explorer.vercel.app/**. Visitors can view the charts and data without installing anything or downloading the original source files.
+
+Deploy directly from the repository root:
+
+```sh
+npx vercel login
+npx vercel link
+npx vercel --prod
+```
+
+Choose an existing Vercel project or create one named `eqao-explorer`. The included `vercel.json` disables dependency installation and building, and publishes `site/` with all prepared data and original downloads. `.vercelignore` restricts CLI uploads to `site/` and the deployment configuration; local project-link settings in `.vercel/` are excluded from Git. Later deployments use the same `npx vercel --prod` command from this folder.
+
+For Git-based deployments, select framework **Other**, keep the repository root as the Root Directory, and use output directory `site` with empty build and install commands. The data snapshot remains fixed until you rebuild and redeploy it.
 
 ### Any static web host
 
@@ -157,11 +179,12 @@ Replace `YOUR-TAILNOW-HOST` with your own host. This requires a separately confi
 
 Open the app and check that:
 
-1. Choose a school; its subject cards, grade overview, trends and achievement levels load. Grade 3/6 and year controls work and saved choices survive a reload.
+1. With no saved school, Home shows trends. Choose a school; its subject cards, grade overview, trends and achievement levels load. Grade 3/6 and year controls work and saved choices survive a reload.
 2. Select nearby schools, expand a subject chart, toggle benchmarks, change the distance and board-type filters, and export the comparison CSV. The separate school search and history dialog also load.
 3. The historical archive and Sources view open.
-4. A CSV export and an original source download succeed.
-5. The layout fits a narrow browser window.
+4. School trends shows annual percentage-point changes; subject, board and participant filters update both rankings and summaries, and its CSV includes all eligible schools.
+5. A CSV export and an original source download succeed.
+6. The layout fits a narrow browser window.
 
 For automated browser checks, install Node.js 20+ and run:
 
@@ -184,6 +207,7 @@ To test a deployed installation instead:
 ```sh
 node tests/browser.mjs https://YOUR-HOST/eqao-explorer/
 node tests/school-browser.mjs https://YOUR-HOST/eqao-explorer/
+node tests/trends-browser.mjs https://YOUR-HOST/eqao-explorer/
 ```
 
 Include a trailing slash for a directory URL. The browser suites check the school-first view, persistence, exact source-backed results, relative-progress arithmetic, missing/suppressed data, distance comparisons, grade/year switches, desktop/mobile layouts, exports, school history, the archive, all 31 source download links, and uncaught browser errors. Screenshots and their reports are written into `tests/` and excluded from Git. Set `CHROME_PATH` if you want to use an existing Chrome executable instead of Playwright's Chromium.

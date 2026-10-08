@@ -36,7 +36,21 @@ The 2019–20 and 2020–21 Ministry resources explicitly say their EQAO results
 
 ## Interpretation
 
-These are different student cohorts each year. Changes are descriptive and do not estimate the causal effect of a school or board. Cohort composition and participation matter. No composite score, causal ranking, missing-data imputation or longitudinal student tracking is used. English and French systems are shown separately.
+These are different student cohorts each year. Changes are descriptive and do not estimate the causal effect of a school or board. Cohort composition and participation matter. The School trends view offers a descriptive equal-weight mean of subject changes, explicitly labelled; it is not a school-quality score. No causal ranking, missing-data imputation or longitudinal student tracking is used. English and French systems are shown separately.
+
+## School trends
+
+The School trends tab compares the selected year with the immediately preceding year in the current series, separately for each grade and language system. The earliest included year has no annual comparison; historical results are never substituted. School identifiers and language join the two year files. The current year's board membership determines board filters.
+
+Reading, writing and mathematics ranks use their own published percentage-point changes. Across all three uses the equal-weight arithmetic mean of the three subject changes, requiring exact numeric percentages in every subject in both years. Its previous/current subject means are averages across subjects, not the percentage of students meeting all three standards. Suppressed, bounded and missing results are excluded, never inferred. Sorting uses unrounded calculated changes; displayed changes and means use one decimal place when needed.
+
+An optional minimum-participant filter requires the selected subject's count to meet the threshold in both years; the combined measure requires each of the three counts to meet it. Unknown counts cannot satisfy a positive threshold. All reported group sizes is the default and does not impose a count threshold. In the combined view, the optional same-direction filter requires all three changes to be strictly positive or all three strictly negative. Zero or mixed changes do not pass it. These are descriptive display filters, not statistical significance tests.
+
+Each largest-increase/decrease list shows at most ten schools and excludes zero changes. Equal unrounded changes share a competition rank (1, 1, 3). Ties are ordered by school name and then identifier, including at the tenth row. Both panels use one common magnitude scale; signed labels identify direction. School names open the existing school dashboard. Subject results and participant counts for both years can be expanded on every row.
+
+All aggregate statistics and the CSV use the complete eligible selection, not just the top ten. Median change gives each school equal weight. Direction shares use eligible schools as the denominator, with exact zero classified as unchanged. The all-three-improving share uses eligible schools with exact paired values in all three subjects; in a subject-specific view this denominator can be smaller than the eligible count. Coverage reports eligible schools out of all current-year schools in the selected language, board type and board filters, with sequential exclusions for absent numeric pairs, participant counts and direction. Distribution bins partition unrounded changes as ≤ −10; (−10, −5]; (−5, 0); exactly 0; (0, +5); [+5, +10); ≥ +10 pp.
+
+Ontario change comes from published provincial records for the matching language/grade/year pair. The combined benchmark uses the equal-weight mean of the three published provincial changes; it does not average schools or change with board filters. Exports include both years' subject values, counts, changes, source filenames and school change minus Ontario change. Small groups can produce large movements, and annual groups differ; these rankings describe results rather than school effectiveness.
 
 ## Chart presentation
 
