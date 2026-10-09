@@ -18,11 +18,11 @@ for(const year of [...core.years,...core.archiveYears])for(const grade of [3,6])
 const elements=new Map();
 function element(selector){
   if(!elements.has(selector))elements.set(selector,{innerHTML:'',textContent:'',value:'',clientWidth:1000,hidden:false,
-    addEventListener(){},setAttribute(){},removeAttribute(){},classList:{toggle(){}},
+    addEventListener(){},setAttribute(){},removeAttribute(){},append(){},classList:{toggle(){}},
     insertAdjacentHTML(position,html){this.innerHTML+=html;}});
   return elements.get(selector);
 }
-const context=vm.createContext({document:{querySelector:element,querySelectorAll:()=>[],body:element('body')},
+const context=vm.createContext({document:{querySelector:element,querySelectorAll:()=>[],createElement:element,addEventListener(){},body:element('body')},
   window:{addEventListener(){}},fetch:()=>new Promise(()=>{}),URLSearchParams,
   location:{search:'',pathname:'/'},localStorage:{getItem:()=>null,setItem(){}},history:{replaceState(){}},
   setTimeout:()=>0,clearTimeout(){},innerWidth:1440,console});

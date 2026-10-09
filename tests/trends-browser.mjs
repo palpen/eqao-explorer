@@ -32,13 +32,13 @@ function expected({year=2026,grade=3,language='en',type='all',subject='all',mini
 }
 
 async function check(options={}){
-  await page.locator('#trend-subject').waitFor();
+  await page.locator('#trend-period').waitFor();
   const exp=expected(options),actual=await page.evaluate(()=>window.eqaoTool.execute({}).rows);
   assert.deepEqual(actual.map(r=>({id:r.school_id,change:r.annual_change_pp})),exp.rows.map(r=>({id:r.id,change:r.change})));
   for(const direction of ['up','down']){
     const sorted=exp.ranked(direction);
     const displayed=await page.locator(`#trending-${direction} .ranking-row`).evaluateAll(els=>els.map(el=>({id:el.dataset.trendSchool,change:Number(el.dataset.change),rank:Number(el.dataset.rank),width:parseFloat(el.querySelector('.ranking-bar').style.width)})));
-    assert.deepEqual(displayed.map(({id,change,rank})=>({id,change,rank})),sorted.slice(0,10).map(r=>({id:r.id,change:r.change,rank:sorted.findIndex(s=>s.change===r.change)+1})));
+    assert.deepEqual(displayed.map(({id,change,rank})=>({id,change,rank})),sorted.slice(0,options.limit||5).map(r=>({id:r.id,change:r.change,rank:sorted.findIndex(s=>s.change===r.change)+1})));
     const extrema=[...exp.ranked('up').slice(0,10),...exp.ranked('down').slice(0,10)].map(r=>Math.abs(r.change));
     const scale=Math.max(10,Math.ceil(Math.max(0,...extrema)/10)*10);
     // CSS percentage serialization rounds to six significant digits.
@@ -47,7 +47,7 @@ async function check(options={}){
   assert.match(await page.locator('#trend-coverage').textContent(),new RegExp(`^${exp.rows.length.toLocaleString('en-CA')} of ${exp.total.toLocaleString('en-CA')} schools eligible`));
   const values=exp.rows.map(r=>r.change).sort((a,b)=>a-b),m=Math.floor(values.length/2);
   const median=values.length?(values.length%2?values[m]:(values[m-1]+values[m])/2):null;
-  assert.equal(await page.locator('.trend-cards .stat').first().textContent(),median===null?'—':`${median>0?'+':''}${Number(median.toFixed(1))} pp`);
+  assert.equal(await page.locator('.trend-cards .stat').first().textContent(),median===null?'—':`${median>0?'+':''}${Number(median.toFixed(1))} points`);
   const barCount=await page.locator('.distribution-bin strong').allTextContents();
   assert.equal(barCount.reduce((sum,v)=>sum+Number(v.replaceAll(',','')),0),exp.rows.length);
   return exp;
@@ -56,15 +56,19 @@ async function check(options={}){
 try{
   await page.goto(initial);await check();
   assert.equal(await page.locator('#subjects').isVisible(),false);
-  assert.equal(await page.locator('[data-view="trends"]').getAttribute('aria-current'),'page');
+  assert.equal(await page.locator('#views [data-view="trends"]').getAttribute('aria-current'),'page');
   await page.screenshot({path:root+'/tests/trends-desktop.png',fullPage:true});
+  await page.locator('#trend-show-more').click();await check({limit:10});
+  await page.locator('#trend-show-more').click();await check();
   await page.locator('.ranking-details summary').first().click();
   assert.equal(await page.locator('.ranking-details').first().locator('tbody tr').count(),3);
   await page.locator('.ranking-details summary').first().click();
   for(const subject of ['0','1','2','all']){await page.locator('#trend-subject').selectOption(subject);await check({subject})}
+  await page.locator('#more-filters').click();
   await page.locator('#trend-minimum').selectOption('30');await check({minimum:30});
   await page.locator('#trend-consistent').check();await check({minimum:30,consistent:true});
   await page.reload();await check({minimum:30,consistent:true});
+  await page.locator('#more-filters').click();
   assert.equal(await page.locator('#trend-consistent').isChecked(),true);
   assert.equal(await page.locator('#trend-minimum').inputValue(),'30');
   await page.locator('#trend-subject').selectOption('0');await check({subject:'0',minimum:30,consistent:true});
@@ -79,7 +83,7 @@ try{
   const schoolId=await page.locator('[data-trend-open]').first().getAttribute('data-trend-open');
   await page.locator('[data-trend-open]').first().focus();await page.keyboard.press('Enter');
   await page.locator('#school-trends').waitFor();assert.equal(new URL(page.url()).searchParams.get('school'),schoolId);
-  await page.locator('[data-view="trends"]').click();await check({minimum:30,board:'66052'});
+  await page.locator('#views [data-view="trends"]').click();await check({minimum:30,board:'66052'});
   await page.locator('#trend-board').selectOption('all');await page.locator('#trend-minimum').selectOption('0');
   await page.locator('[data-grade="6"]').click();await check({grade:6});
   await page.locator('#language').selectOption('fr');await check({grade:6,language:'fr'});
@@ -99,6 +103,7 @@ try{
     if(width===390)await page.screenshot({path:root+'/tests/trends-mobile.png',fullPage:true});
   }
   await page.setViewportSize({width:1440,height:1060});
+  await page.locator('#more-filters').click();
   await page.locator('#trend-minimum').selectOption('100');await check({minimum:100});
   await page.locator('#trend-board').selectOption('66133');await check({minimum:100,board:'66133'});
   await page.locator('#trend-minimum').selectOption('0');await check({board:'66133'});
@@ -108,7 +113,7 @@ try{
   const route='**/data/schools-2025-3.json';await retryPage.route(route,r=>r.abort());
   await retryPage.goto(initial);await retryPage.locator('#retry-trends').waitFor();
   assert.equal(await retryPage.locator('#export').isDisabled(),true);
-  await retryPage.unroute(route);await retryPage.locator('#retry-trends').click();await retryPage.locator('#trend-subject').waitFor();
+  await retryPage.unroute(route);await retryPage.locator('#retry-trends').click();await retryPage.locator('#trend-period').waitFor();
   await retryPage.close();assert.deepEqual(errors,[]);
   console.log(JSON.stringify({passed:true,url:base,checks:['Source-backed ranks and shared bar scale','Combined and all subject measures','Paired participant minimum and same-direction filter','Board, board type, language, grade and selected-year filters','Filter URL restoration','Median, coverage and distribution counts','All filtered rows in CSV with signed relative changes','Keyboard school navigation','Missing previous year and empty comparison','Data-load failure and retry without stale export','Original source links','Desktop/mobile at 1024, 390 and 320px including expanded details','No uncaught browser errors']},null,2));
 }finally{await browser.close()}

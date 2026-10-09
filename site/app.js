@@ -3,8 +3,9 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const subjects=['Reading','Writing','Mathematics'];
 const subjectColors=['#28679d','#a5633d','#79658d'];
-const defaultState=()=>({view:'myschool',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all',school:'',comparisons:[],radius:5,nearType:'all',expanded:null,showOntario:true,showBoard:true,trendSubject:'all',trendBoard:'all',trendMinimum:0,trendConsistent:false});
+const defaultState=()=>({view:'trends',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all',school:'',comparisons:[],radius:5,nearType:'all',expanded:null,showOntario:true,showBoard:false,trendSubject:'all',trendBoard:'all',trendMinimum:0,trendConsistent:false});
 const state=defaultState();
+const ui={moreFilters:false,trendLimit:5,schoolDetails:new Set()};
 let pushNavigation=false;
 let data;
 const yearLabel=y=>`${y-1}–${String(y).slice(2)}`;
@@ -17,6 +18,22 @@ function results(){return data.results.filter(r=>r.year===state.year&&r.grade===
 function province(year=state.year,grade=state.grade){return data.province.find(r=>r.year===year&&r.grade===grade&&r.language===state.language)}
 function setGrade(g){state.grade=g;render()}
 function setView(v){pushNavigation=state.view!==v;state.view=v;state.search='';state.page=0;if(v==='archive')state.year=2019;else if(state.year<2022)state.year=2026;render()}
+function syncFilters(displayView){
+  const school=displayView==='myschool',trends=displayView==='trends',sources=displayView==='sources';
+  $('#filter-bar').hidden=sources||(school&&!state.school);
+  $('#subject-field').hidden=school||trends;$('#subjects').hidden=school||trends;
+  $('#language-field').hidden=school;$('#more-filters').hidden=school;
+  $('#trend-subject-field').hidden=!trends;$('#trend-board-field').hidden=!trends;
+  $('#trend-minimum-field').hidden=!trends;$('#trend-consistent-field').hidden=!trends;
+  $('#trend-subject').value=state.trendSubject;$('#trend-minimum').value=state.trendMinimum;
+  $('#trend-consistent').checked=state.trendConsistent;$('#trend-consistent').disabled=state.trendSubject!=='all';
+  const active=Number(state.type!=='all')+(trends?Number(state.trendMinimum>0)+Number(state.trendConsistent&&state.trendSubject==='all'):0);
+  $('#more-filters').textContent=`More filters${active?` · ${active} active`:''} ${ui.moreFilters?'−':'+'}`;
+  $('#more-filters').setAttribute('aria-expanded',String(ui.moreFilters));
+  $('#advanced-filters').hidden=school||sources||!ui.moreFilters;
+}
+$('#more-filters').onclick=()=>{ui.moreFilters=!ui.moreFilters;syncFilters(state.view)};
+$('#reset-filters').onclick=()=>{state.type='all';state.trendMinimum=0;state.trendConsistent=false;$('#boardType').value=state.type;render()};
 $('#grades').onclick=e=>{const b=e.target.closest('[data-grade]');if(b)setGrade(+b.dataset.grade)};
 $('#subjects').onclick=e=>{const b=e.target.closest('[data-subject]');if(b){state.subject=+b.dataset.subject;render()}};
 $('#year').onchange=e=>{state.year=+e.target.value;render()};
@@ -58,6 +75,7 @@ function restoreUrl(useSaved=true){
   if(p.has('pins'))state.pins=p.get('pins').split(',').filter(x=>/^\d{5}$/.test(x)).slice(0,4);
   if(/^\d{5}$/.test(p.get('focus')||''))state.focus=p.get('focus');
   if(p.has('school'))state.school=/^\d{6}$/.test(p.get('school'))?p.get('school'):'';
+  if(!p.has('view'))state.view=state.school?'myschool':'trends';
   if(p.has('compare'))state.comparisons=p.get('compare').split(',').filter(x=>/^\d{6}$/.test(x)).slice(0,4);
   if(p.has('radius')&&[1,3,5,10,25,50].includes(+p.get('radius')))state.radius=+p.get('radius');
   if(state.view==='archive'&&state.year>2019)state.year=2019;
@@ -73,15 +91,15 @@ window.addEventListener('popstate',event=>{
   $('#school-chooser').open=false;$('#school-picker-search').value='';
   updateSchoolPicker();render();
 });
-for(const link of $$('.brand, .app-home'))link.onclick=event=>{
+for(const link of $$('.brand'))link.onclick=event=>{
   if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
-  event.preventDefault();setView('myschool');$('#main').scrollIntoView({block:'start'});
+  event.preventDefault();setView(state.school?'myschool':'trends');$('#main').scrollIntoView({block:'start'});
 };
 function render(){
   if(!data)return;
   const token=++renderToken;chartRedraw=null;schoolChartRedraw=null;
-  const homeTrends=state.view==='myschool'&&!state.school;
-  const displayView=homeTrends?'trends':state.view;
+  const displayView=state.view;
+  if(displayView==='myschool'&&schoolInfo(state.school)){state.language=schoolInfo(state.school).language;$('#language').value=state.language}
   const rs=results().sort((a,b)=>a.name.localeCompare(b.name));
   if(state.view!=='archive'){
     const available=new Set(rs.map(r=>r.id));
@@ -91,23 +109,26 @@ function render(){
   }
   $$('#grades button').forEach(b=>{const on=+b.dataset.grade===state.grade;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',on)});
   $$('#subjects button').forEach(b=>{const on=+b.dataset.subject===state.subject;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on)});
-  $$('#views button').forEach(b=>{const on=b.dataset.view===state.view;b.classList.toggle('active',on);b.setAttribute('aria-current',on?'page':'false')});
+  $$('[data-view]').forEach(b=>{const on=b.dataset.view===state.view||(b.closest('#views')&&b.dataset.view==='trends'&&state.view==='schools');b.classList.toggle('active',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  $('#explore-views').hidden=!['trends','schools'].includes(displayView);
   const titles={myschool:['SELECTED SCHOOL','Start with your school.','See how it’s doing, follow the changes, and find useful questions to ask.'],boards:['BOARD COMPARISON','A clearer view of achievement.','Compare Ontario’s school boards and follow results over time.'],schools:['SCHOOL EXPLORER','Look closer, school by school.','Find a school, compare its results, and explore its recent history.'],archive:['HISTORICAL ARCHIVE','Before the digital assessments.','Explore the oldest province-wide raw school results located in the current public catalogues.'],sources:['SOURCES & COVERAGE','Know what is behind the numbers.','Original files, definitions, data coverage, and reproducible downloads.']};
   titles.trends=['SCHOOL TRENDS','Where are results moving?','Explore the largest annual changes and the patterns across schools.'];
-  const title=titles[displayView];$('#section-label').textContent=title[0];$('#page-title').textContent=title[1];$('#page-description').textContent=homeTrends?'Explore school trends across Ontario. Choose a school above to see its individual results.':title[2];
-  $('.toolbar').hidden=state.view==='sources';$('#side-controls').hidden=state.view==='sources';$('#export').hidden=state.view==='sources';
-  $('#subjects').hidden=displayView==='trends';$('#export').disabled=false;
+  const title=titles[displayView];$('#section-label').textContent=title[0];$('#page-title').textContent=title[1];$('#page-description').textContent=title[2];
+  syncFilters(displayView);$('#export').hidden=state.view==='sources';$('#export').disabled=false;
+  $('#choose-school').hidden=['sources','archive'].includes(displayView);
   document.body.classList.toggle('school-home',displayView==='myschool');
-  $('.school-context').hidden=displayView!=='myschool';
   const years=state.view==='archive'?data.archiveYears:data.years;
   $('#year').innerHTML=[...years].reverse().map(y=>`<option value="${y}" ${y===state.year?'selected':''}>${yearLabel(y)}</option>`).join('');
-  $('#home-year').innerHTML=$('#year').innerHTML;
-  $$('#home-grades button').forEach(b=>{const on=+b.dataset.homeGrade===state.grade;b.classList.toggle('selected',on);b.setAttribute('aria-pressed',on)});
   const notice=$('#notice');notice.hidden=true;
   if(state.view==='archive'){notice.hidden=false;notice.innerHTML='<strong>Different measurement basis.</strong> These Ministry workbooks contain school-level results. Any board summary below is an unweighted mean of reported school percentages, not an official board result. Assessment format and reporting changed after 2018–19; these results are kept separate from the current series.'}
   else if(state.year===2022&&state.view!=='sources'){notice.hidden=false;notice.innerHTML='<strong>2021–22 calculation note.</strong> EQAO says these CSV values may differ from its interactive dashboards because of calculation methods. This app uses the published CSV values consistently.'}
   refreshUrl();
-  if(displayView==='myschool')renderMySchool(token);
+  if(displayView==='myschool'&&!state.school){
+    $('#export').hidden=true;exportRows=[];
+    $('#content').innerHTML='<section class="welcome-panel"><p>Choose a school to see reading, writing and mathematics together, with Ontario benchmarks and changes over time.</p><button id="welcome-choose" class="button">Find your school</button></section>';
+    $('#welcome-choose').onclick=()=>{$('#school-chooser').open=true;$('#school-picker-search').focus()};
+  }
+  else if(displayView==='myschool')renderMySchool(token);
   else if(displayView==='trends')renderSchoolTrends(token);
   else if(state.view==='boards')renderBoards(rs);
   else if(state.view==='sources')renderSources();
@@ -128,6 +149,11 @@ function renderBoards(rs){
   <div class="panels"><section class="panel trend-panel"><div class="panel-head"><div><p class="eyebrow">01 / THE LONGER VIEW</p><h2>${trendFinding(data.years.map(y=>province(y)?.values[i]??null),data.years,data.years.indexOf(state.year),subjects[i])}</h2><p>Ontario’s ${state.language==='en'?'English':'French'}-language system · Grade ${state.grade} ${subjects[i].toLowerCase()} · ${yearLabel(state.year)}</p></div></div><div id="trend" class="chart"></div><div class="chart-readout" id="trend-readout" aria-live="polite">Hover, tap or focus a point to explore a year.</div><p class="chart-caption">Source: <a href="downloads/${encodeURIComponent(p?.source||'')}" download>EQAO achievement data</a> · Fully participating students at Levels 3 and 4. The vertical shading marks the selected school year. Annual results describe different groups of students. The 2021–22 CSV uses a different calculation method from EQAO’s interactive dashboard.</p><div class="pin-controls"><label for="add-board">Compare up to four boards with Ontario</label><select id="add-board"><option value="">Add a school board…</option>${rs.filter(r=>!state.pins.includes(r.id)).map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select><div id="pins" class="chips">${state.pins.map((id,j)=>`<span class="chip"><span class="swatch" style="background:${colors[j]}"></span>${esc(board(id)?.name)}<button data-unpin="${id}" aria-label="Remove ${esc(board(id)?.name)} from comparison">×</button></span>`).join('')}</div></div></section>
   <section class="panel focus-panel" id="focus-panel"></section></div>
   <section class="panel detail-panel"><div class="panel-head"><div><p class="eyebrow">02 / COMPARE THE DETAILS</p><h2>Across Ontario’s boards</h2><p>Students at the provincial standard (%) · select a board for its profile, or + to compare its trend.</p></div><span class="badge">${yearLabel(state.year)}</span></div><div class="table-toolbar"><span class="small muted" id="board-count"></span><input class="search" id="board-search" type="search" placeholder="Search school boards…" aria-label="Search school boards" value="${esc(state.search)}"></div><div class="table-wrap" id="board-table"></div><div class="table-bottom"><span id="board-page-label"></span><div class="pagination"><button id="board-prev" aria-label="Previous boards">‹</button><button id="board-next" aria-label="Next boards">›</button></div></div><p class="chart-caption" style="margin:18px 0 0">pp = percentage points. Both difference columns refer to ${subjects[i].toLowerCase()}. The Ontario benchmark includes public and provincial schools in the selected language system; it does not change with the board-type filter.</p></section>`;
+  const analysis=document.createElement('details');analysis.id='board-analysis';analysis.className='school-disclosure';analysis.open=Boolean(ui.boardDetails);
+  analysis.innerHTML='<summary>Explore board trends and student groups <span>Historical comparisons and board profiles</span></summary>';
+  analysis.append($('.cards'),$('.panels'));$('#content').append(analysis);
+  $('#content').insertAdjacentHTML('afterbegin',`<section class="board-overview" aria-label="Ontario benchmarks"><p class="small muted">Ontario · ${state.language==='en'?'English':'French'}-language · students meeting or exceeding the provincial standard</p><div>${subjects.map((s,j)=>`<p><span>${s}</span><strong>${rawLabel(p,j)}</strong></p>`).join('')}</div></section>`);
+  analysis.addEventListener('toggle',()=>{ui.boardDetails=analysis.open;if(analysis.open)chartRedraw?.()});
   const chartSeries=[{name:'Ontario',color:'#626b60',dashed:true,values:data.years.map(y=>province(y)?.values[i]??null)},...state.pins.map((id,j)=>({name:board(id)?.name||id,color:colors[j],values:data.years.map(y=>data.results.find(r=>r.id===id&&r.year===y&&r.grade===state.grade&&r.language===state.language)?.values[i]??null)}))];
   chartRedraw=()=>drawTrend($('#trend'),chartSeries,data.years,$('#trend-readout'),{selectedYear:state.year,annotate:true});
   chartRedraw();
@@ -139,8 +165,8 @@ function renderBoards(rs){
 }
 function drawTrend(el,series,years,readout,options={}){
   if(!el)return;
-  const w=Math.max(260,el.clientWidth),direct=w>=580,h=direct?350:310;
-  const m={l:38,r:direct?158:12,t:options.annotate?82:42,b:38},iw=w-m.l-m.r,ih=h-m.t-m.b;
+  const w=Math.max(240,el.clientWidth),compact=Boolean(options.compact),direct=!compact&&w>=580,h=compact?180:direct?350:310;
+  const m={l:38,r:direct?158:12,t:compact?15:options.annotate?82:42,b:compact?32:38},iw=w-m.l-m.r,ih=h-m.t-m.b;
   const numericValues=series.flatMap(s=>s.values).filter(v=>Number.isFinite(v));
   let lower=options.fixedScale?0:numericValues.length?Math.max(0,Math.floor((Math.min(...numericValues)-8)/10)*10):0;
   let upper=options.fixedScale?100:numericValues.length?Math.min(100,Math.ceil((Math.max(...numericValues)+8)/10)*10):100;
@@ -150,8 +176,8 @@ function drawTrend(el,series,years,readout,options={}){
   let html=`<svg viewBox="0 0 ${w} ${h}" role="group" aria-label="${title}. The vertical scale runs from ${lower}% to ${upper}%. Focus or tap a point for details."><title>${title}</title><desc>Lines show annual school-year results. Gaps indicate missing or suppressed results. Line charts use a labelled scale; subject-profile bars use the full 0 to 100% scale.</desc>`;
   const selected=years.indexOf(options.selectedYear);
   if(selected>=0)html+=`<rect class="selected-year-band" x="${Math.max(m.l,x(selected)-15)}" y="${m.t-9}" width="${Math.min(w-m.r,x(selected)+15)-Math.max(m.l,x(selected)-15)}" height="${ih+9}" fill="#efeee7"/>`;
-  html+=`<text class="axis-label" x="${m.l}" y="18">${title}</text>`;
-  const tickStep=upper-lower>60?20:10;
+  if(!compact)html+=`<text class="axis-label" x="${m.l}" y="18">${title}</text>`;
+  const tickStep=compact?50:upper-lower>60?20:10;
   const ticks=[];for(let v=lower;v<=upper;v+=tickStep)ticks.push(v);if(ticks.at(-1)!==upper)ticks.push(upper);
   ticks.forEach(v=>{html+=`<line x1="${m.l}" x2="${w-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#dedfd8" stroke-width=".7"/><text x="${m.l-10}" y="${y(v)+4}" text-anchor="end">${v}%</text>`});
   years.forEach((yr,j)=>{html+=`<text x="${x(j)}" y="${h-15}" text-anchor="${j===0?'start':j===years.length-1?'end':'middle'}" style="${yr===options.selectedYear?'fill:#252824;font-weight:600':''}"><title>${yearLabel(yr)}</title>${w<460?`${String(yr-1).slice(2)}–${String(yr).slice(2)}`:yearLabel(yr)}</text>`});
@@ -205,7 +231,7 @@ function renderBoardTable(rs){
   $('#board-count').textContent=`${rows.length} boards · ${state.language==='en'?'English':'French'}-language`;
   $('#board-table').innerHTML=`<table><thead><tr><th>${sortableHeader('School board','name')}</th>${subjects.map((s,i)=>`<th class="numeric ${i===state.subject?'subject-col':''}" aria-sort="${state.sort===String(i)?state.direction===1?'ascending':'descending':'none'}">${sortableHeader(s,String(i))}</th>`).join('')}<th class="numeric">vs Ontario</th><th class="numeric">Year change</th><th>Compare</th></tr></thead><tbody>${rows.slice(state.page*size,(state.page+1)*size).map(r=>`<tr class="${r.id===state.focus?'selected-row':''}"><td class="name-cell"><button data-focus="${r.id}">${esc(r.name)}</button><small>${esc(board(r.id)?.type)} · ${r.id}</small></td>${subjects.map((s,i)=>metricCell(r,i)).join('')}<td class="numeric">${changeHTML(difference(r.values[state.subject],province()?.values[state.subject]))}</td><td class="numeric">${changeHTML(difference(r.values[state.subject],previous(r)?.values[state.subject]))}</td><td><button class="pin-button ${state.pins.includes(r.id)?'on':''}" data-pin="${r.id}" aria-label="${state.pins.includes(r.id)?'Remove':'Compare'} ${esc(r.name)}" aria-pressed="${state.pins.includes(r.id)}">${state.pins.includes(r.id)?'−':'+'}</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No boards match this search. Try a shorter name or change the filters.</td></tr>'}</tbody></table>`;
   $('#board-page-label').textContent=rows.length?`${state.page*size+1}–${Math.min((state.page+1)*size,rows.length)} of ${rows.length}`:'No matching boards';$('#board-prev').disabled=state.page===0;$('#board-next').disabled=state.page===pages-1;
-  $('#board-table').onclick=e=>{const s=e.target.closest('[data-sort]'),f=e.target.closest('[data-focus]'),p=e.target.closest('[data-pin]');if(s){state.direction=state.sort===s.dataset.sort?-state.direction:s.dataset.sort==='name'?1:-1;state.sort=s.dataset.sort;state.page=0;renderBoardTable(rs)}if(f){state.focus=f.dataset.focus;renderFocus(rs);renderBoardTable(rs);refreshUrl();if(innerWidth<760)$('#focus-panel').scrollIntoView({behavior:'smooth',block:'start'})}if(p){if(state.pins.includes(p.dataset.pin))state.pins=state.pins.filter(id=>id!==p.dataset.pin);else if(state.pins.length<4)state.pins.push(p.dataset.pin);else{toast('You can compare up to four boards. Remove one first.');return}render()}};
+  $('#board-table').onclick=e=>{const s=e.target.closest('[data-sort]'),f=e.target.closest('[data-focus]'),p=e.target.closest('[data-pin]');if(s){state.direction=state.sort===s.dataset.sort?-state.direction:s.dataset.sort==='name'?1:-1;state.sort=s.dataset.sort;state.page=0;renderBoardTable(rs)}if(f){$('#board-analysis').open=true;state.focus=f.dataset.focus;renderFocus(rs);renderBoardTable(rs);refreshUrl();if(innerWidth<760)$('#focus-panel').scrollIntoView({behavior:'smooth',block:'start'})}if(p){ui.boardDetails=true;if(state.pins.includes(p.dataset.pin))state.pins=state.pins.filter(id=>id!==p.dataset.pin);else if(state.pins.length<4)state.pins.push(p.dataset.pin);else{toast('You can compare up to four boards. Remove one first.');return}render()}};
   exportRows=rows.map(r=>({school_year:yearLabel(r.year),grade:r.grade,board_id:r.id,board_name:r.name,language:r.language,reading:r.raw[0],writing:r.raw[1],mathematics:r.raw[2],reading_participants:r.participants[0],writing_participants:r.participants[1],math_participants:r.participants[2],source:r.source,metric:'Percent of fully participating students at Levels 3 and 4'}));
 }
 async function getSchools(year,grade){
@@ -266,8 +292,8 @@ function exportCSV(){
   const text='\ufeff'+[fields.map(csvCell).join(','),...exportRows.map(r=>fields.map(k=>csvCell(r[k])).join(','))].join('\r\n');
   const url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=`eqao-${state.view}-grade${state.grade}-${state.year}-${state.language}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`Exported ${exportRows.length} matching rows.`);
 }
-$('#views').onclick=e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view)};
-$('#footer-source').onclick=()=>{setView('sources');$('#main').scrollIntoView({block:'start'})};$('#export').onclick=exportCSV;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b){setView(b.dataset.view);$('#main').scrollIntoView({block:'start'})}});
+$('#export').onclick=exportCSV;
 $('#school-dialog').addEventListener('close',()=>{schoolChartRedraw=null});
 $('.dialog-close').onclick=()=>$('#school-dialog').close();$('#school-dialog').onclick=e=>{if(e.target===$('#school-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}};
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{chartRedraw?.();schoolChartRedraw?.()},150)});

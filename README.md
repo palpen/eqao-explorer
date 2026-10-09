@@ -1,23 +1,24 @@
 # EQAO Explorer
 
-EQAO Explorer is a responsive dashboard with a **Home** page that shows Ontario school trends until a school is selected. Choose a school to understand its Grade 3 and Grade 6 reading, writing, and mathematics results, how they change over time, and how they compare with its board, Ontario, and selected schools nearby. The board explorer, historical archive, and original downloads remain available.
+EQAO Explorer is a responsive dashboard for Ontario’s Grade 3 and Grade 6 reading, writing, and mathematics results. Its three main destinations are **My school**, **Explore schools**, and **Compare boards**. New visitors start with school trends; returning visitors with a saved school start with that school’s overview. The historical archive and sources remain available in the footer.
 
 The app is static HTML, CSS, and JavaScript. It has no backend, database, account system, or API key requirement. The repository includes the prepared data and original source downloads, so you can run or deploy it immediately without rebuilding the dataset. This is an independent project, not an official EQAO reporting tool.
 
 ## What you can explore
 
-- A compact school control that stays at the top as you scroll. **Change school** opens a single search field with matching schools underneath; click or use the arrow keys and Enter to select a school. The search stays hidden during normal review. **Clear school** removes the saved school and comparisons and returns Home to trends. School, grade/year, and comparison choices are saved in your browser and can also be shared through the URL. **School trends** remains available without clearing your selection; Home returns to the selected school. Browser Back and Forward restore the previous view and filters.
-- Three subject cards with published school, board and Ontario results, annual change, and the Ontario gap; a side-by-side grade overview.
-- Three trend charts on a consistent 0–100% scale, with blue for reading, terracotta for writing, and purple for mathematics; the same colours carry into expanded charts. Expand to compare with Ontario, the school’s board, and up to four chosen schools.
+- **Choose school / Change school** opens one searchable school picker. Click a result or use arrow keys and Enter. **Clear school** clears the school and comparisons and returns to Explore schools. School, grade/year, and comparison choices are saved locally and shareable through the URL; Back and Forward restore navigation and filters.
+- A single filter area for grade, year, subject, language system, and school board as applicable. **More filters** contains board type, participant minimum, and the all-subject direction filter, with a visible active-filter count and reset action.
+- Three combined subject panels show the current school percentage, annual change, Ontario comparison, participant count, and a compact historical chart. The panels share a 0–100% scale, align on desktop, and stack on phones. Reading is blue, writing terracotta, and mathematics purple.
+- Expand a subject to compare against Ontario, optionally its board, and up to four selected schools. Chart values remain available by keyboard, touch, and in a table. One evidence-backed observation appears below the subject panels; nearby comparisons, achievement/participation, and school-conversation questions expand on demand. The side-by-side grade overview lives inside achievement details.
 - Relative progress: how the school’s gap changes against each benchmark or selected school, rather than just whether its own score rises.
 - Nearby schools within 1–50 km, with language system, board type, current results, subject-specific changes and participant counts. Schools beyond the radius can be selected by name.
 - Achievement-level distributions, participation, and questions grounded in persistent patterns. Suppressed, bounded and missing values remain explicit.
 - Official school, board, and provincial results for **2021–22 through 2025–26**.
 - A separate historical school archive for **2017–18 and 2018–19**.
 - English- and French-language systems, public and Catholic district boards, and other authorities.
-- Board trends, provincial benchmarks, participation counts, subject profiles, published student-group results, and school histories.
+- Compare boards leads with all three Ontario benchmarks and the searchable board table. Board trends, participation counts, profiles, and published student-group results remain in an expandable analysis section. Selecting a board opens its profile.
 - Searchable, sortable tables and CSV exports of the current filtered board results.
-- A **School trends** tab with the ten largest annual increases and decreases, measured in percentage points, for reading, writing, mathematics or the equal-weight mean across all three. Grade, language, board, participant minimum and same-direction filters apply to ranks, summary statistics and CSV exports. Median change, direction shares, comparison coverage and a change distribution describe all eligible schools; each ranked row includes both years' results and participant counts.
+- **Explore schools** includes School trends and Find schools. Trends initially shows five annual increases and five decreases, with **Show ten in each direction** for more. Measures include reading, writing, mathematics, and the explicitly labelled equal-weight average across subjects. Grade, language, board, participant minimum and same-direction filters apply to ranks, summary statistics and CSV exports. Median change, direction shares, expandable coverage/exclusions, and a change distribution describe all eligible schools; each ranked row includes both years' results and participant counts.
 - Downloads of all 31 original publisher files, with source URLs and checksums.
 
 The data snapshot was retrieved on **6 October 2026**. There is no automatic refresh. Suppressed or missing results remain missing; the app does not estimate them. Historical school averages are not official board results and are kept separate from the current series. See [the methodology](docs/methodology.md) for coverage, definitions, and interpretation limits.
@@ -179,9 +180,9 @@ Replace `YOUR-TAILNOW-HOST` with your own host. This requires a separately confi
 
 Open the app and check that:
 
-1. With no saved school, Home shows trends. Choose a school; its subject cards, grade overview, trends and achievement levels load. Grade 3/6 and year controls work and saved choices survive a reload.
-2. Select nearby schools, expand a subject chart, toggle benchmarks, change the distance and board-type filters, and export the comparison CSV. The separate school search and history dialog also load.
-3. The historical archive and Sources view open.
+1. Without a saved school, Explore schools shows trends. My school offers a school picker. Choose a school and check the combined subject panels; expand achievement details for the grade overview. Grade/year controls and saved choices survive reloads.
+2. Expand Compare with other schools, select nearby schools, expand a subject chart, toggle benchmarks, change the distance and board-type filters, and export the comparison CSV. The separate school search and history dialog also load.
+3. The historical archive and Sources view open from the footer; board analysis expands and its charts redraw correctly.
 4. School trends shows annual percentage-point changes; subject, board and participant filters update both rankings and summaries, and its CSV includes all eligible schools.
 5. A CSV export and an original source download succeed.
 6. The layout fits a narrow browser window.

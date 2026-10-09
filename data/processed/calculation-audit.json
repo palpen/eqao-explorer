@@ -16,15 +16,15 @@
   "code": [
     {
       "path": "site/app.js",
-      "sha256": "83b1db9219e4d03b0d6af2a27df6f46be82e1c691323ea8e20aa6a8718cd9e05"
+      "sha256": "2428f2d24b16a34d3b8f079987f9b197de186b59cbf018693dd62b9f9de7976f"
     },
     {
       "path": "site/school.js",
-      "sha256": "9fae7c6373ea667a99b6ff86cb859a376226055b92522c56e1b71620d53a2f25"
+      "sha256": "b8e3b23288758f0c8c2b027225d0ab654909f6b09f6774081bf2bc3e0d78db64"
     },
     {
       "path": "site/trends.js",
-      "sha256": "626ad26a0c6e05547549a47067e34ceaca6adada089f205e968ae0155cdc0f12"
+      "sha256": "b457e0ae45e32c34743a4859c2c145422574a1b6af15ebee5a2110cc62f492d8"
     }
   ],
   "checks": [

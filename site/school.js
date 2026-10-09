@@ -34,7 +34,10 @@ function updateSchoolPicker(){
 }
 function updateSchoolChooserLabel(){
   $('#school-change-label').textContent=$('#school-chooser').open?'Close search':schoolInfo(state.school)?'Change school':'Choose school';
+  $('#choose-school').textContent=$('#school-change-label').textContent;
+  $('#choose-school').setAttribute('aria-expanded',String($('#school-chooser').open));
 }
+$('#choose-school').onclick=()=>{const chooser=$('#school-chooser');chooser.open=!chooser.open;if(chooser.open)$('#school-picker-search').focus()};
 function updatePickerActive(){
   const input=$('#school-picker-search'),shown=pickerMatches.length>0&&!pickerDismissed;
   $('#school-picker-results').hidden=!shown;input.setAttribute('aria-expanded',String(shown));
@@ -46,18 +49,18 @@ function updatePickerActive(){
 async function selectMySchool(id){
   await getSchoolIndex();const s=schoolInfo(id);if(!s)return;
   pushNavigation=state.school!==id||state.view!=='myschool';
-  if(state.school!==id){state.comparisons=[];state.expanded=null;}
+  if(state.school!==id){state.comparisons=[];state.expanded=null;ui.schoolDetails.clear();}
   state.school=id;state.language=s.language;state.view='myschool';
   if(state.year<2022)state.year=2026;
   $('#language').value=s.language;$('#school-chooser').open=false;
-  $('#school-picker-search').value='';updateSchoolPicker();render();$('#chosen-school-label').focus();
+  $('#school-picker-search').value='';updateSchoolPicker();render();$('#choose-school').focus();
 }
 $('#clear-school').onclick=()=>{
   pushNavigation=true;
-  state.school='';state.comparisons=[];state.expanded=null;state.view='myschool';
+  state.school='';state.comparisons=[];state.expanded=null;state.view='trends';ui.schoolDetails.clear();
   if(state.year<2022)state.year=2026;
   $('#school-chooser').open=false;$('#school-picker-search').value='';
-  updateSchoolPicker();render();$('#chosen-school-label').focus();
+  updateSchoolPicker();render();$('#choose-school').focus();
   toast('School selection cleared.');
 };
 $('#school-picker-search').oninput=updateSchoolPicker;
@@ -77,8 +80,6 @@ $('#school-chooser').addEventListener('toggle',()=>{
   if(!$('#school-chooser').open){pickerDismissed=true;pickerActive=-1;updatePickerActive()}
   else{pickerDismissed=false;updatePickerActive();if(document.activeElement===$('#chosen-school-label'))$('#school-picker-search').focus()}
 });
-$('#home-grades').onclick=e=>{const b=e.target.closest('[data-home-grade]');if(b)setGrade(+b.dataset.homeGrade)};
-$('#home-year').onchange=e=>{state.year=+e.target.value;render()};
 getSchoolIndex().then(updateSchoolPicker).catch(updateSchoolPicker);
 
 function distanceKm(a,b){
@@ -108,6 +109,19 @@ function progressNote(summary,subject){
   const total=summary.total;
   return `${total===0?'At the same level':`${total>0?'Up':'Down'} ${Number(Math.abs(total).toFixed(1))} pp`} since ${yearLabel(summary.startYear)}${summary.direction==='declining'?' · down in both of the last two annual changes':summary.direction==='improving'?' · up in both of the last two annual changes':''}.`;
 }
+function annualChangeWords(v){return v===null?'Previous-year comparison unavailable':v===0?'Unchanged since last year':`${v>0?'Up':'Down'} ${Number(Math.abs(v).toFixed(1))} percentage points since last year`}
+function benchmarkGapWords(v){return v===null?'Comparison unavailable':v===0?'Same as Ontario':`${Number(Math.abs(v).toFixed(1))} points ${v>0?'above':'below'} Ontario`}
+function schoolFinding(rows,years){
+  const summaries=subjects.map((s,i)=>schoolSummary(rows,years,i)),changes=summaries.map(s=>s.annual);
+  if(!changes.some(Number.isFinite))return 'More paired annual results are needed to describe a change.';
+  if(changes.every(v=>Number.isFinite(v)&&v>0))return `All three subjects increased this year. ${subjects[changes.indexOf(Math.max(...changes))]} had the largest increase, up ${Number(Math.max(...changes).toFixed(1))} percentage points.`;
+  if(changes.every(v=>Number.isFinite(v)&&v<0))return 'All three subjects decreased compared with the previous year.';
+  if(changes.every(v=>v===0))return 'All three subjects are unchanged from the previous year.';
+  return subjects.map((s,i)=>`${s}: ${changes[i]===null?'comparison unavailable':changes[i]===0?'unchanged':`${changes[i]>0?'up':'down'} ${Number(Math.abs(changes[i]).toFixed(1))} points`}`).join(' · ')+'.';
+}
+function syncExpandButtons(){
+  $$('[data-expand-subject]').forEach(b=>{const i=+b.dataset.expandSubject,on=i===state.expanded;b.textContent=on?'Close comparison ↗':`Compare ${subjects[i].toLowerCase()} ↗`;b.setAttribute('aria-expanded',String(on))});
+}
 
 async function renderMySchool(token){
   exportRows=[];homeContext=null;$('#export').hidden=true;
@@ -116,7 +130,7 @@ async function renderMySchool(token){
     await getSchoolIndex();if(token!==renderToken)return;
     const meta=schoolInfo(state.school);
     if(!meta){
-      state.school='';state.comparisons=[];updateSchoolPicker();render();
+      state.school='';state.comparisons=[];state.view='trends';updateSchoolPicker();render();
       return;
     }
     state.language=meta.language;$('#language').value=meta.language;
@@ -136,23 +150,27 @@ async function renderMySchool(token){
     $('#section-label').textContent=`SELECTED SCHOOL / ${meta.id}`;
     $('#export').hidden=false;
     $('#content').innerHTML=`
-      <div class="school-overview-caption"><span>Grade ${state.grade} · ${yearLabel(state.year)}</span><span>Students meeting the provincial standard · Levels 3 & 4</span></div>
-      <div class="cards school-cards">${subjects.map((s,i)=>{
+      <div class="school-overview-caption"><span>Students meeting or exceeding the provincial standard</span><span>Grade ${state.grade} · ${yearLabel(state.year)} · Levels 3 & 4</span></div>
+      <section id="school-trends" aria-label="School results and trends"><div class="cards school-cards">${subjects.map((subject,i)=>{
         const sum=schoolSummary(rows,years,i),gap=difference(schoolValue(r,i),schoolValue(p,i));
-        return `<article class="card primary subject-card" data-overview-subject="${i}"><div class="label">${s}</div><div class="stat">${schoolStatus(r,i)}</div><div class="sub">${sum.annual===null?'Previous-year comparison unavailable':`${changeHTML(sum.annual)} vs ${yearLabel(state.year-1)}`}</div><div class="card-benchmarks"><span>Ontario <strong>${schoolStatus(p,i)}</strong></span><span>Board <strong>${schoolStatus(b,i)}</strong></span></div><p class="card-gap">${delta(gap)} vs Ontario</p></article>`;
-      }).join('')}</div>
+        return `<article class="card subject-card" data-overview-subject="${i}"><h2 class="label"><i class="subject-dot" style="background:${subjectColors[i]}"></i>${subject}</h2><div class="stat">${schoolStatus(r,i)}</div><div class="sub ${sum.annual<0?'negative':''}">${annualChangeWords(sum.annual)}</div><div class="card-benchmarks">Ontario <strong>${schoolStatus(p,i)}</strong><span class="card-gap">${benchmarkGapWords(gap)}</span></div><div id="school-chart-${i}" class="chart"></div><div id="school-readout-${i}" class="chart-readout" aria-live="polite">Focus or tap a point for its result.</div><div class="subject-actions"><span>${r?.participants?.[i]==null?'Participation unavailable':`${number(r.participants[i])} participating students`}</span><button class="text-button" data-expand-subject="${i}" aria-expanded="${state.expanded===i}" aria-controls="expanded-subject">${state.expanded===i?'Close comparison':`Compare ${subject.toLowerCase()}`} ↗</button></div></article>`;
+      }).join('')}</div><p class="chart-caption">Charts share a 0–100% scale. Missing or suppressed results remain gaps. Each year describes a different group of students. <a href="downloads/${encodeURIComponent(r?.source||`Grade-${state.grade}-${state.year-1}-${state.year}-Achievement-Results.zip`)}" download>Original EQAO results · ${yearLabel(state.year)}</a></p><div id="expanded-subject" ${state.expanded===null?'hidden':''}></div></section>
+      <section class="school-finding"><p class="eyebrow">WHAT STANDS OUT</p><div><p>${schoolFinding(rows,years)}</p><p class="small muted">These results describe a pattern; they do not explain what caused it.</p></div></section>
+      <details class="school-disclosure" id="school-comparisons" ${ui.schoolDetails.has('school-comparisons')?'open':''}><summary>Compare with other schools <span>Nearby schools and relative progress</span></summary><div class="disclosure-body">
+      <section class="comparison-schools"><div class="panel-head"><div><p class="eyebrow">02 / SCHOOLS AROUND YOU</p><h2>Choose your comparison schools</h2><p>Pick up to four schools to add to an expanded subject chart.</p></div></div><div id="comparison-chips" class="chips"></div><div class="nearby-controls"><div><label for="near-radius">Distance from your school</label><select id="near-radius">${[1,3,5,10,25,50].map(k=>`<option value="${k}" ${state.radius===k?'selected':''}>Within ${k} km</option>`).join('')}</select></div><div><label for="near-type">Board type</label><select id="near-type">${Object.entries({all:'All boards & authorities',Public:'Public',Catholic:'Catholic','Other authority':'Other authorities'}).map(([v,l])=>`<option value="${v}" ${state.nearType===v?'selected':''}>${l}</option>`).join('')}</select></div><div><label for="near-subject">Change & participation for</label><select id="near-subject">${subjects.map((s,i)=>`<option value="${i}" ${state.subject===i?'selected':''}>${s}</option>`).join('')}</select></div><div><label for="near-search">Search nearby schools</label><input id="near-search" type="search" placeholder="School name or city…"></div></div><p id="nearby-description" class="small muted"></p><div class="table-wrap" id="nearby-table"></div><div class="table-bottom"><span id="nearby-count"></span><div class="pagination"><button id="nearby-prev" aria-label="Previous nearby schools">‹</button><button id="nearby-next" aria-label="Next nearby schools">›</button></div></div><details class="outside-comparison"><summary>Add a school beyond this distance</summary><label for="peer-search">Find a comparison school</label><input id="peer-search" type="search" placeholder="Search name, city or school number…"><label for="peer-select">School in the ${languageLabel(meta.language).toLowerCase()} system</label><select id="peer-select"><option value="">Search above to choose a school…</option></select><p class="small muted">Uses the same language system as your school. Saved comparisons remain selected when the distance or board-type filter changes.</p></details><p class="chart-caption">Distances are straight-line distances between published school coordinates, not attendance boundaries or travel distances. ${meta.locationSource?`Location metadata for your school comes from Ontario’s ${yearLabel(meta.locationYear)} school-information workbook.`:"Ontario location metadata is unavailable for your school."} School results and participant counts refer to ${yearLabel(state.year)}.</p></section>
+      <section class="panel" id="relative-progress"></section></div></details>
+      <details class="school-disclosure" id="school-achievement" ${ui.schoolDetails.has('school-achievement')?'open':''}><summary>Achievement levels and participation <span>Behind the percentage</span></summary><div class="disclosure-body"><section id="achievement-context"></section>
       <details class="grade-overview"><summary>Grade 3 & Grade 6, side by side</summary><div class="table-wrap"><table id="grade-overview"><thead><tr><th>School / grade</th>${subjects.map(s=>`<th class="numeric">${s}</th>`).join('')}</tr></thead><tbody>${grades.map(g=>{
         const gr=record(meta.id,state.year,g),gp=provincial(meta.language,state.year,g);
         return `<tr><th scope="row">Grade ${g} · school</th>${subjects.map((s,i)=>`<td class="numeric">${schoolStatus(gr,i)}<small class="cell-note">${delta(difference(schoolValue(gr,i),schoolValue(gp,i)))} vs Ontario</small></td>`).join('')}</tr><tr class="benchmark-row"><td>Grade ${g} · Ontario</td>${subjects.map((s,i)=>`<td class="numeric">${schoolStatus(gp,i)}</td>`).join('')}</tr>`;
       }).join('')}</tbody></table></div><p class="small muted">Each grade uses its own published Ontario benchmark. Grades are different student groups.</p></details>
-      <section class="school-section" id="school-trends"><div class="panel-head"><div><p class="eyebrow">01 / THE LONGER VIEW</p><h2>How are results changing?</h2><p>Grade ${state.grade} · ${yearLabel(years[0])} to ${yearLabel(state.year)} · all charts share a 0–100% scale.</p></div></div><div class="trend-small-multiples">${subjects.map((s,i)=>`<article class="subject-trend"><div class="subject-trend-head"><h3>${s}</h3><button class="text-button" data-expand-subject="${i}" aria-expanded="${state.expanded===i}" aria-controls="expanded-subject">${state.expanded===i?'Close':'Compare'} <span aria-hidden="true">↗</span></button></div><p class="trend-finding">${progressNote(schoolSummary(rows,years,i),s)}</p><div id="school-chart-${i}" class="chart"></div><div id="school-readout-${i}" class="chart-readout" aria-live="polite">Focus or tap a point for the year and result.</div></article>`).join('')}</div><p class="chart-caption">Missing or suppressed results remain gaps. Each year describes a different group of students. ${years.includes(2022)?'EQAO notes a calculation difference between the 2021–22 CSV and its interactive reports. ':''}<a href="downloads/${encodeURIComponent(r?.source||`Grade-${state.grade}-${state.year-1}-${state.year}-Achievement-Results.zip`)}" download>Original EQAO results · ${yearLabel(state.year)}</a></p><div id="expanded-subject" ${state.expanded===null?'hidden':''}></div></section>
-      <div class="school-insights"><section class="panel" id="relative-progress"></section><section class="panel conversation-panel" id="school-conversations"></section></div>
-      <section class="school-section"><div class="panel-head"><div><p class="eyebrow">02 / SCHOOLS AROUND YOU</p><h2>Choose your comparison schools</h2><p>Pick up to four schools to add to an expanded subject chart.</p></div></div><div id="comparison-chips" class="chips"></div><div class="nearby-controls"><div><label for="near-radius">Distance from your school</label><select id="near-radius">${[1,3,5,10,25,50].map(k=>`<option value="${k}" ${state.radius===k?'selected':''}>Within ${k} km</option>`).join('')}</select></div><div><label for="near-type">Board type</label><select id="near-type">${Object.entries({all:'All boards & authorities',Public:'Public',Catholic:'Catholic','Other authority':'Other authorities'}).map(([v,l])=>`<option value="${v}" ${state.nearType===v?'selected':''}>${l}</option>`).join('')}</select></div><div><label for="near-subject">Change & participation for</label><select id="near-subject">${subjects.map((s,i)=>`<option value="${i}" ${state.subject===i?'selected':''}>${s}</option>`).join('')}</select></div><div><label for="near-search">Search nearby schools</label><input id="near-search" type="search" placeholder="School name or city…"></div></div><p id="nearby-description" class="small muted"></p><div class="table-wrap" id="nearby-table"></div><div class="table-bottom"><span id="nearby-count"></span><div class="pagination"><button id="nearby-prev" aria-label="Previous nearby schools">‹</button><button id="nearby-next" aria-label="Next nearby schools">›</button></div></div><details class="outside-comparison"><summary>Add a school beyond this distance</summary><label for="peer-search">Find a comparison school</label><input id="peer-search" type="search" placeholder="Search name, city or school number…"><label for="peer-select">School in the ${languageLabel(meta.language).toLowerCase()} system</label><select id="peer-select"><option value="">Search above to choose a school…</option></select><p class="small muted">Uses the same language system as your school. Saved comparisons remain selected when the distance or board-type filter changes.</p></details><p class="chart-caption">Distances are straight-line distances between published school coordinates, not attendance boundaries or travel distances. ${meta.locationSource?`Location metadata for your school comes from Ontario’s ${yearLabel(meta.locationYear)} school-information workbook.`:"Ontario location metadata is unavailable for your school."} School results and participant counts refer to ${yearLabel(state.year)}.</p></section>
-      <section class="school-section" id="achievement-context"></section>
-      <section class="school-section school-life"><p class="eyebrow">04 / SCHOOL LIFE & SUPPORT</p><h2>The rest of the school experience</h2><p>Belonging, safety, attendance, special education support and extracurricular opportunities matter, too. School-specific evidence for these topics is not included in this collection yet.</p><div class="support-items"><div><h3>Interest & confidence</h3><p>EQAO student questionnaire results are the next data addition. They are not available in this dashboard yet.</p></div><div><h3>Programs & practical support</h3><p>Ask the school what is offered, who is eligible, and how families can access it. Achievement percentages cannot describe the support available.</p></div></div><p class="small muted">Future items will identify their source, date, and whether they describe this school or the whole board.</p></section>`;
+      </div></details>
+      <details class="school-disclosure" id="school-questions" ${ui.schoolDetails.has('school-questions')?'open':''}><summary>Questions to ask the school <span>Turn a pattern into a conversation</span></summary><section class="disclosure-body" id="school-conversations"></section></details>
+      <p class="school-life chart-caption">Results are one part of understanding a school. Belonging, programs, safety and support matter too; school-specific evidence for these topics is not included here.</p>`;
+    $$('.school-disclosure').forEach(el=>el.addEventListener('toggle',()=>{if(el.open)ui.schoolDetails.add(el.id);else ui.schoolDetails.delete(el.id)}));
     let nearPage=0;
     const redraw=()=>{
-      subjects.forEach((s,i)=>drawTrend($(`#school-chart-${i}`),[{name:'Selected school',color:subjectColors[i],values:rows.map(r=>schoolValue(r,i))},{name:'Ontario',color:'#777b72',dashed:true,values:years.map(y=>schoolValue(provincial(meta.language,y,state.grade),i))}],years,$(`#school-readout-${i}`),{fixedScale:true,selectedYear:state.year}));
+      subjects.forEach((s,i)=>drawTrend($(`#school-chart-${i}`),[{name:'Selected school',color:subjectColors[i],values:rows.map(r=>schoolValue(r,i))},{name:'Ontario',color:'#777b72',dashed:true,values:years.map(y=>schoolValue(provincial(meta.language,y,state.grade),i))}],years,$(`#school-readout-${i}`),{fixedScale:true,selectedYear:state.year,compact:true}));
       drawExpandedSchool();
     };
     chartRedraw=redraw;redraw();renderRelativeProgress();renderSchoolConversations();renderAchievementContext();renderComparisonChips();
@@ -170,7 +188,7 @@ async function renderMySchool(token){
       $('#peer-select').innerHTML=`<option value="">${q?candidates.length?'Choose a school…':'No schools match':'Search above to choose a school…'}</option>`+candidates.map(s=>`<option value="${s.id}">${esc(s.name)} · ${esc(s.city)} · ${esc(board(s.board)?.type)}</option>`).join('');
     };
     $('#peer-select').onchange=e=>{if(e.target.value)toggleComparison(e.target.value)};
-    $('#school-trends').onclick=e=>{const b=e.target.closest('[data-expand-subject]');if(b){state.expanded=state.expanded===+b.dataset.expandSubject?null:+b.dataset.expandSubject;render()}};
+    $('#school-trends').onclick=e=>{const b=e.target.closest('[data-expand-subject]');if(b){state.expanded=state.expanded===+b.dataset.expandSubject?null:+b.dataset.expandSubject;drawExpandedSchool();syncExpandButtons();if(state.expanded!==null){$('#expanded-subject').scrollIntoView({block:'nearest'});$('#close-comparison').focus({preventScroll:true})}}};
     nearby();
   }catch(e){
     if(token!==renderToken)return;
@@ -187,12 +205,16 @@ function expandedSeries(i){
     ...state.comparisons.map((id,j)=>({name:schoolInfo(id).name,color:peerColors[j],values:history(id).map(r=>schoolValue(r,i))}))];
 }
 function drawExpandedSchool(){
-  if(state.expanded===null||!homeContext)return;
-  const el=$('#expanded-subject');if(!el)return;
+  const el=$('#expanded-subject');if(!el||!homeContext)return;
+  if(state.expanded===null){el.hidden=true;return}
+  const valuesOpen=el.querySelector('details')?.open||false;
   el.hidden=false;const i=state.expanded;
-  el.innerHTML=`<div class="panel-head"><div><h3>${subjects[i]} · the full comparison</h3><p>Grade ${state.grade} · your saved schools and published benchmarks</p></div></div><div class="line-switches"><label><input type="checkbox" id="line-ontario" ${state.showOntario?'checked':''}> Ontario</label><label><input type="checkbox" id="line-board" ${state.showBoard?'checked':''}> School board</label><span class="small muted">Comparison schools can be removed below.</span></div><div id="expanded-school-chart" class="chart"></div><div id="expanded-school-readout" class="chart-readout" aria-live="polite">Focus or tap a point for details.</div><details><summary>View the chart’s values</summary><div class="table-wrap"><table><thead><tr><th>School year</th>${expandedSeries(i).map(s=>`<th class="numeric">${esc(s.name)}</th>`).join('')}</tr></thead><tbody>${homeContext.years.map((y,j)=>`<tr><th scope="row">${yearLabel(y)}</th>${expandedSeries(i).map(s=>`<td class="numeric">${pct(s.values[j])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details><p class="chart-caption">Board values follow the school’s reported board membership in each year. Comparison lines describe different annual student groups. All scales are 0–100%.</p>`;
+  el.innerHTML=`<div class="panel-head"><div><h3>${subjects[i]} · the full comparison</h3><p>Grade ${state.grade} · your saved schools and published benchmarks</p></div><button id="close-comparison" class="text-button">Close comparison</button></div><div class="line-switches"><label><input type="checkbox" id="line-ontario" ${state.showOntario?'checked':''}> Ontario</label><label><input type="checkbox" id="line-board" ${state.showBoard?'checked':''}> School board</label><button id="choose-comparisons" class="text-button">Choose comparison schools ↗</button></div><div id="expanded-school-chart" class="chart"></div><div id="expanded-school-readout" class="chart-readout" aria-live="polite">Focus or tap a point for details.</div><details><summary>View the chart’s values</summary><div class="table-wrap"><table><thead><tr><th>School year</th>${expandedSeries(i).map(s=>`<th class="numeric">${esc(s.name)}</th>`).join('')}</tr></thead><tbody>${homeContext.years.map((y,j)=>`<tr><th scope="row">${yearLabel(y)}</th>${expandedSeries(i).map(s=>`<td class="numeric">${pct(s.values[j])}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details><p class="chart-caption">Board values follow the school’s reported board membership in each year. Comparison lines describe different annual student groups. All scales are 0–100%.</p>`;
   drawTrend($('#expanded-school-chart'),expandedSeries(i),homeContext.years,$('#expanded-school-readout'),{fixedScale:true,selectedYear:state.year});
-  $('#line-ontario').onchange=e=>{state.showOntario=e.target.checked;drawExpandedSchool()};$('#line-board').onchange=e=>{state.showBoard=e.target.checked;drawExpandedSchool()};
+  $('#close-comparison').onclick=()=>{const i=state.expanded;state.expanded=null;el.hidden=true;syncExpandButtons();$(`[data-expand-subject="${i}"]`).focus()};
+  $('#choose-comparisons').onclick=()=>{const panel=$('#school-comparisons');panel.open=true;ui.schoolDetails.add(panel.id);panel.scrollIntoView({block:'start'});panel.querySelector('summary').focus()};
+  el.querySelector('details').open=valuesOpen;
+  $('#line-ontario').onchange=e=>{state.showOntario=e.target.checked;drawExpandedSchool();$('#line-ontario').focus({preventScroll:true})};$('#line-board').onchange=e=>{state.showBoard=e.target.checked;drawExpandedSchool();$('#line-board').focus({preventScroll:true})};
 }
 
 function renderRelativeProgress(){
@@ -235,7 +257,7 @@ function toggleComparison(id){
   if(state.expanded===null)state.expanded=state.subject;
   refreshUrl();renderComparisonChips();drawExpandedSchool();renderRelativeProgress();renderSchoolConversations();renderNearbySchools($('#near-search').value,homeContext.nearPage||0);
   // Update expansion controls without rebuilding the page or losing table focus.
-  $$('[data-expand-subject]').forEach(b=>{const on=+b.dataset.expandSubject===state.expanded;b.textContent=on?'Close ↗':'Compare ↗';b.setAttribute('aria-expanded',on)});
+  syncExpandButtons();
 }
 function renderNearbySchools(query='',page=0){
   const {meta,current,record}=homeContext,q=query.trim().toLocaleLowerCase();

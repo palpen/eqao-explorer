@@ -9,7 +9,7 @@ const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH ?
 const page=await browser.newPage({viewport:{width:1440,height:1060},deviceScaleFactor:1});
 const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.addInitScript(()=>{document.modelContext={registerTool(t){window.eqaoTool=t;}}});
-await page.goto(boardBase);await page.locator('#board-table tbody tr').first().waitFor();
+await page.goto(boardBase);await page.locator('#board-table tbody tr').first().waitFor();await page.locator('#board-analysis > summary').click();
 await page.screenshot({path:root+'/tests/desktop.png',fullPage:true});
 await page.screenshot({path:root+'/tests/editorial-preview.png'});
 assert.equal(await page.locator('#board-count').textContent(),'60 boards · English-language');
@@ -33,12 +33,13 @@ for(let j=0;j<2;j++){
 assert.equal(await page.locator('#trend .end-label').count(),5);
 const labelBounds=await page.locator('#trend .end-label').evaluateAll(labels=>labels.map(l=>{const r=l.getBoundingClientRect();return {top:r.top,bottom:r.bottom}}).sort((a,b)=>a.top-b.top));
 for(let j=1;j<labelBounds.length;j++)assert.ok(labelBounds[j].top>=labelBounds[j-1].bottom,'Direct series labels must not overlap');
-await page.goto(boardBase);await page.locator('#board-table tbody tr').first().waitFor();
+await page.goto(boardBase);await page.locator('#board-table tbody tr').first().waitFor();await page.locator('#board-analysis > summary').click();
 await page.locator('[data-grade="6"]').click();
 assert.equal(await page.locator('.card.primary .stat').textContent(),'86%');
 await page.locator('[data-subject="2"]').click();
 await page.locator('#language').selectOption('fr');
 assert.equal(await page.locator('#board-count').textContent(),'12 boards · French-language');
+await page.locator('#more-filters').click();
 await page.locator('#boardType').selectOption('Catholic');
 assert.equal(await page.locator('#board-count').textContent(),'8 boards · French-language');
 await page.locator('#year').selectOption('2022');assert.equal(await page.locator('#notice').isVisible(),true);
@@ -49,7 +50,7 @@ assert.match(await fs.readFile(root+'/tests/filtered-export.csv','utf8'),/Toront
 await page.locator('#board-search').fill('there is no such school board');assert.match(await page.locator('#board-table').textContent(),/No boards match/);
 await page.locator('#board-search').fill('');await page.locator('[data-sort="2"]').click();
 const tool=await page.evaluate(()=>({valid:window.eqaoTool.execute({}).rows.length,invalid:(()=>{try{window.eqaoTool.execute({bad:true});return false}catch{return true}})()}));assert.equal(tool.valid,60);assert.equal(tool.invalid,true);
-await page.locator('[data-view="schools"]').click();await page.locator('#school-table tbody tr').first().waitFor();await page.locator('#school-search').fill('Woodbridge');
+await page.locator('#views [data-view="trends"]').click();await page.locator('[data-view="schools"]').click();await page.locator('#school-table tbody tr').first().waitFor();await page.locator('#school-search').fill('Woodbridge');
 await page.locator('[data-school]').first().click();await page.locator('#school-trend svg').waitFor();await page.screenshot({path:root+'/tests/school-detail.png'});await page.locator('.dialog-close').click();
 await page.locator('[data-view="archive"]').click();await page.locator('#archive-summary table').waitFor();assert.match(await page.locator('#notice').textContent(),/unweighted/);await page.locator('#year').selectOption('2018');await page.locator('#school-table').waitFor();await page.locator('#toast').waitFor({state:'hidden'});await page.screenshot({path:root+'/tests/archive.png'});
 await page.locator('[data-view="sources"]').click();assert.equal(await page.locator('.source-list li').count(),31);await page.screenshot({path:root+'/tests/sources.png'});
@@ -57,7 +58,7 @@ for(const filename of ['audit.json','calculation-audit.json','publisher-audit.js
   const response=await page.request.get(new URL(`data/${filename}`,base).href);
   assert.equal(response.status(),200,filename);assert.equal((await response.json()).passed,true,filename);
 }
-await page.goto(boardBase);await page.locator('#board-table tbody tr').first().waitFor();
+await page.goto(boardBase);await page.locator('#board-table tbody tr').first().waitFor();await page.locator('#board-analysis > summary').click();
 await page.setViewportSize({width:1024,height:1000});await page.waitForTimeout(250);await page.screenshot({path:root+'/tests/tablet.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Tablet page should not overflow horizontally');
 await page.setViewportSize({width:390,height:844});await page.waitForTimeout(250);await page.screenshot({path:root+'/tests/mobile.png',fullPage:true});
 assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Mobile page should not overflow horizontally');
@@ -69,7 +70,13 @@ for(const url of sourceLinks){const r=await page.request.head(url);assert.equal(
 await page.locator('[data-view="boards"]').click();
 await page.locator('[data-grade="6"]').click();await page.locator('[data-subject="2"]').click();
 await page.setViewportSize({width:320,height:760});await page.waitForTimeout(200);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'320px page should not overflow horizontally');
-await page.setViewportSize({width:1440,height:1060});await page.locator('#boardType').selectOption('Other authority');assert.match(await page.locator('#board-count').textContent(),/boards/);
+await page.setViewportSize({width:1440,height:1060});await page.locator('#more-filters').click();await page.locator('#boardType').selectOption('Other authority');assert.match(await page.locator('#board-count').textContent(),/boards/);
+const boardActionPage=await browser.newPage();
+await boardActionPage.goto(boardBase);await boardActionPage.locator('#board-table tbody tr').first().waitFor();
+assert.equal(await boardActionPage.locator('#board-analysis').getAttribute('open'),null);
+await boardActionPage.locator('#board-table [data-pin]:not(.on)').first().click();
+assert.equal(await boardActionPage.locator('#trend').isVisible(),true,'Adding a board reveals its comparison chart');
+await boardActionPage.close();
 assert.deepEqual(errors,[]);
 const report={passed:true,url:base,desktop:'1440x1060',mobile:['390x844','320x760'],checks:['source-backed headline values','filter-aware findings and exact low-point annotation','keyboard-accessible chart values','five direct series labels without overlap','responsive chart key','grade and subject switching','English/French and board-type filters','2021-22 caveat','search and empty state','filtered CSV download','sort','read-only agent tool valid and invalid inputs','school history dialog','historical archive','31 source links return HTTP 200','no mobile page overflow including Sources','no uncaught browser errors']};
 await fs.writeFile(root+'/tests/browser-validation.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));

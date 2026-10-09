@@ -4,17 +4,25 @@ const base=process.argv[2]||process.env.EQAO_TEST_URL||'http://127.0.0.1:8766/';
 const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
 const page=await browser.newPage({viewport:{width:1440,height:1060}}),errors=[];
 page.on('pageerror',e=>errors.push(e.message));
-const trends=()=>page.locator('#trend-subject').waitFor();
+const trends=()=>page.locator('#trend-period').waitFor();
 const school=()=>page.locator('#school-chart-0 svg').waitFor();
 const saved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('eqao-my-school-v1')));
 try{
   await page.goto(base);await trends();
-  assert.equal(await page.locator('[data-view="myschool"]').textContent(),'Home');
-  assert.equal(await page.locator('[data-view="myschool"]').getAttribute('aria-current'),'page');
+  assert.equal(await page.locator('[data-view="myschool"]').textContent(),'My school');
+  assert.equal(await page.locator('#views [data-view="trends"]').getAttribute('aria-current'),'page');
   assert.equal(await page.locator('#subjects').isVisible(),false);
-  assert.equal(await page.locator('#side-controls').isVisible(),true);
+  assert.equal(await page.locator('#filter-bar').isVisible(),true);
   assert.equal(await page.locator('#clear-school').isVisible(),false);
+  await page.locator('[data-view="myschool"]').click();
+  await page.locator('#welcome-choose').waitFor();
+  assert.equal(await page.locator('#filter-bar').isVisible(),false,'No empty-school filters');
+  await page.locator('#welcome-choose').click();
+  assert.equal(await page.locator('#school-picker-search').isVisible(),true);
+  await page.locator('#choose-school').click();
+  await page.locator('#views [data-view="trends"]').click();await trends();
   await page.locator('#trend-subject').selectOption('2');
+  await page.locator('#more-filters').click();
   await page.locator('#trend-minimum').selectOption('30');
   await page.locator('#trend-board').selectOption('66052');
   const rankings=await page.locator('.ranking-school').allTextContents();
@@ -32,13 +40,23 @@ try{
   assert.equal(await page.locator('#school-change-label').textContent(),'Choose school');
   await page.goForward();await school();assert.equal((await saved()).school,id);
   await page.reload();await school();
-  await page.locator('[data-view="trends"]').click();await trends();
+  await page.locator('#views [data-view="trends"]').click();await trends();
+  await page.locator('#language').selectOption('fr');await trends();
+  await page.locator('[data-view="myschool"]').click();await school();
+  assert.match(await page.locator('#page-description').textContent(),/English-language/,'Selected school restores its own language benchmark');
+  assert.equal(await page.locator('#language').inputValue(),'en');
+  await page.locator('#views [data-view="trends"]').click();await trends();
+  await page.locator('#trend-board').selectOption('66052');await trends();
+  await page.locator('[data-view="myschool"]').click();await school();
+
+  await page.locator('#views [data-view="trends"]').click();await trends();
   assert.equal((await saved()).school,id,'Browsing trends retains the selection');
   assert.equal(await page.locator('#trend-board').inputValue(),'66052','Trend filters survive a school reload');
-  await page.locator('.app-home').click();await school();
+  await page.locator('.brand').click();await school();
+  await page.locator('#school-comparisons > summary').click();
   await page.locator('[data-compare-school]').first().click();
   assert.equal((await saved()).comparisons.length,1);
-  await page.locator('#chosen-school-label').click();
+  await page.locator('#choose-school').click();
   await page.locator('#clear-school').click();await trends();
   assert.equal((await saved()).school,'');assert.deepEqual((await saved()).comparisons,[]);
   assert.equal(new URL(page.url()).searchParams.get('school'),'');
@@ -50,21 +68,27 @@ try{
   assert.equal(new URL(fresh.url()).searchParams.get('school'),id);await fresh.close();
   // An unknown school must fall back to a working trends page with the proper controls.
   await page.goto(new URL('?view=myschool&school=000000',base).href);await trends();
-  assert.equal(await page.locator('#side-controls').isVisible(),true);
+  assert.equal(await page.locator('#filter-bar').isVisible(),true);
   assert.equal(new URL(page.url()).searchParams.get('school'),'');
   for(const width of [390,320]){
     await page.setViewportSize({width,height:844});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`Home fits ${width}px`);
-    await page.locator('#chosen-school-label').click();
+    await page.locator('#choose-school').click();
     await page.locator('#school-picker-search').fill(id);
     await page.locator(`[data-pick-school="${id}"]`).click();await school();
-    await page.locator('#chosen-school-label').click();
+    await page.locator('#choose-school').click();
     assert.equal(await page.locator('#clear-school').isVisible(),true);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`Clear school fits ${width}px`);
     if(width===390)await page.screenshot({path:'tests/clear-school-mobile.png'});
     await page.locator('#clear-school').click();await trends();
     if(width===390)await page.screenshot({path:'tests/home-trends-mobile.png',fullPage:true});
   }
+  const legacy=await browser.newPage();
+  await legacy.goto(new URL('?school=123838',base).href);await legacy.locator('#school-chart-0 svg').waitFor();
+  assert.equal(new URL(legacy.url()).searchParams.get('view'),'myschool','A school-only link still opens its school');
+  await legacy.goto(new URL('?school=',base).href);await legacy.locator('#trend-period').waitFor();
+  assert.equal(new URL(legacy.url()).searchParams.get('view'),'trends','An explicit empty school overrides the saved school');
+  await legacy.close();
   assert.deepEqual(errors,[]);
   console.log('Navigation passed: trends home, school selection, Back/Forward, filter restoration, saved selection, clear, shared links, unknown school, mobile layouts.');
 }finally{await browser.close()}
