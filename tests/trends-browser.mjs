@@ -56,8 +56,8 @@ async function check(options={}){
 try{
   await page.goto(initial);await check();
   assert.equal(await page.locator('#subjects').isVisible(),false);
-  assert.equal(await page.locator('#page-title').textContent(),'School result trends');
-  assert.equal(await page.locator('#page-description').isVisible(),false);
+  assert.equal(await page.locator('#page-title').textContent(),'Understand Ontario’s school results');
+  assert.equal(await page.locator('#page-description').isVisible(),true);
   assert.equal(await page.locator('#language').isVisible(),false);
   assert.equal(await page.locator('#trend-board').isVisible(),false);
   assert.equal(await page.locator('#active-filters').isVisible(),false);

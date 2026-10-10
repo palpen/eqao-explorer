@@ -37,9 +37,9 @@ input::placeholder { color: #74796f; }
 .small { font-size: .8125rem; }
 .eyebrow { font-size: .6875rem; letter-spacing: .14em; font-weight: 650; color: var(--muted); margin-bottom: 18px; }
 .topbar { height: 82px; display: flex; align-items: center; gap: 38px; padding: 0 34px; border-bottom: 1px solid var(--line); }
-.brand { color: var(--navy); text-decoration: none; font-family: var(--serif); font-size: 1.55rem; letter-spacing: -.035em; display: flex; align-items: center; gap: 6px; }
+.brand { color: var(--navy); text-decoration: none; font-family: var(--serif); font-size: 1.4375rem; letter-spacing: -.035em; display: flex; align-items: center; gap: 6px; }
 .brand strong { font-weight: 400; }
-.brandmark { width: 24px; height: 24px; margin-right: 9px; color: var(--blue); }
+.brandmark { width: 20px; height: 20px; margin-right: 5px; color: var(--blue); }
 .brandmark svg { display: block; width: 100%; height: 100%; }
 .topmeta { font-size: .625rem; letter-spacing: .15em; color: var(--muted); }
 .divider { margin: 0 14px; color: #b0b4a8; }
@@ -501,6 +501,8 @@ main { max-width: 1220px; padding: 42px 40px 25px; }
 #explore-views button.active { border-color: var(--blue); color: var(--blue); }
 .page-heading { margin-bottom: 25px; align-items: center; }
 .page-heading h1, .school-home h1 { font-size: clamp(2rem, 3.6vw, 3rem); margin-bottom: 14px; }
+.school-trends .page-heading h1 { font-size: 2.25rem; letter-spacing: -.035em; line-height: 1.18; }
+.school-trends #page-description { white-space: pre-line; }
 .page-heading .eyebrow { color: var(--muted); margin-bottom: 12px; }
 .page-heading p:last-child { font-size: .875rem; }
 .page-heading #choose-school { flex: none; }
@@ -617,10 +619,11 @@ summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
   .topbar { display: flex; align-items: start; flex-direction: column; gap: 5px; padding: 20px 20px 0; }
   #views { gap: 25px; overflow: visible; padding: 0; }
   #views .navitem { padding: 14px 0; font-size: .8125rem; }
-  .brand { font-size: 1.5rem; }
+  .brand { font-size: 1.25rem; }
   main { padding: 28px 20px 20px; }
   .page-heading { display: block; }
   .page-heading h1 { font-size: 2.2rem; }
+  .school-trends .page-heading h1 { font-size: 1.8125rem; }
   .page-heading #choose-school { margin-top: 18px; }
   #filter-bar { gap: 17px; }
   #filter-bar .subject-tabs { width: auto; }

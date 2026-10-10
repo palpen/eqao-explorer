@@ -135,9 +135,10 @@ function render(){
   $$('[data-view]').forEach(b=>{const on=b.dataset.view===state.view||(b.closest('#views')&&b.dataset.view==='trends'&&state.view==='schools');b.classList.toggle('active',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   $('#explore-views').hidden=!['trends','schools'].includes(displayView);
   const titles={myschool:['SELECTED SCHOOL','Start with your school.','See how it’s doing, follow the changes, and find useful questions to ask.'],boards:['BOARD COMPARISON','A clearer view of achievement.','Compare Ontario’s school boards and follow results over time.'],schools:['SCHOOL EXPLORER','Look closer, school by school.','Find a school, compare its results, and explore its recent history.'],archive:['HISTORICAL ARCHIVE','Before the digital assessments.','Explore the oldest province-wide raw school results located in the current public catalogues.'],sources:['SOURCES & COVERAGE','Know what is behind the numbers.','Original files, definitions, data coverage, and reproducible downloads.']};
-  titles.trends=['SCHOOL TRENDS','School result trends',''];
+  titles.trends=['SCHOOL TRENDS','Understand Ontario’s school results','Grade 3 and 6 EQAO results in reading, writing and math.\nSee how results change over time and compare schools and boards.'];
   const title=titles[displayView];$('#section-label').textContent=title[0];$('#page-title').textContent=title[1];$('#page-description').textContent=title[2];
-  $('#section-label').hidden=displayView==='trends';$('#page-description').hidden=displayView==='trends';
+  $('#section-label').hidden=displayView==='trends';$('#page-description').hidden=false;
+  document.body.classList.toggle('school-trends',displayView==='trends');
   syncFilters(displayView);$('#export').hidden=state.view==='sources';$('#export').disabled=false;
   $('#choose-school').hidden=['sources','archive'].includes(displayView);
   document.body.classList.toggle('school-home',displayView==='myschool');
