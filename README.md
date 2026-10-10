@@ -1,5 +1,7 @@
 # EQAO Explorer
 
+**Explore the live dashboard: [exploreeqao.com](https://exploreeqao.com/)**
+
 EQAO Explorer is a responsive dashboard for Ontario’s Grade 3 and Grade 6 reading, writing, and mathematics results. Its three main destinations are **My school**, **Explore schools**, and **Compare boards**. New visitors start with school trends; returning visitors with a saved school start with that school’s overview. The historical archive and sources remain available in the footer.
 
 The app is static HTML, CSS, and JavaScript. It has no backend, database, account system, or API key requirement. The repository includes the prepared data and original source downloads, so you can run or deploy it immediately without rebuilding the dataset. This is an independent project, not an official EQAO reporting tool.
@@ -132,7 +134,7 @@ No build command or runtime dependencies are required. Keep both data folders: w
 
 ### Vercel
 
-Public dashboard: **https://eqao-explorer.vercel.app/**. Visitors can view the charts and data without installing anything or downloading the original source files.
+Public dashboard: **[exploreeqao.com](https://exploreeqao.com/)**. Visitors can view the charts and data without installing anything or downloading the original source files.
 
 Deploy directly from the repository root:
 
