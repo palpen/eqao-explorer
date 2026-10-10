@@ -14,7 +14,7 @@
 <div class="app-shell">
 <main id="main" tabindex="-1">
   <nav id="explore-views" aria-label="Explore schools" hidden><button data-view="trends">School trends</button><button data-view="schools">Find schools</button></nav>
-  <div class="page-heading"><div><p class="eyebrow" id="section-label">SCHOOL TRENDS</p><h1 id="page-title">Where are results moving?</h1><p id="page-description">Explore school trends across Ontario, or choose a school to see its results.</p></div><button id="choose-school" class="button secondary" aria-expanded="false" aria-controls="school-chooser">Choose school</button></div>
+  <div class="page-heading"><div><p class="eyebrow" id="section-label" hidden>SCHOOL TRENDS</p><h1 id="page-title">School result trends</h1><p id="page-description" hidden></p></div><button id="choose-school" class="button secondary" aria-expanded="false" aria-controls="school-chooser">Choose school</button></div>
   <section class="school-selector" aria-label="Choose your school">
     <details id="school-chooser"><summary id="chosen-school-label"><span id="selected-school-name">Explore Ontario schools</span><span id="school-change-label" class="school-change-action">Choose school</span></summary><div class="school-picker-fields"><label for="school-picker-search">Find your school</label><input id="school-picker-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="school-picker-results" aria-describedby="school-picker-hint picker-count" autocomplete="off" placeholder="School name or city…"><p id="school-picker-hint" class="small muted">Search by school name, city, board or school number.</p><div id="school-picker-results" class="school-picker-results" role="listbox" aria-label="Matching schools" hidden></div><p id="picker-count" class="small muted" role="status">Loading schools…</p><button type="button" id="clear-school" class="text-button" hidden>Clear school</button></div></details>
   </section>
@@ -25,23 +25,32 @@
       <div class="filter-field"><label for="year">School year</label><select id="year"></select></div>
       <div class="filter-field" id="subject-field"><span class="field-label">Subject</span><div class="subject-tabs" id="subjects" aria-label="Subject"><button class="active" data-subject="0">Reading</button><button data-subject="1">Writing</button><button data-subject="2">Mathematics</button></div></div>
       <div class="filter-field" id="trend-subject-field" hidden><label for="trend-subject">Subject</label><select id="trend-subject"><option value="all">Average across subjects</option><option value="0">Reading</option><option value="1">Writing</option><option value="2">Mathematics</option></select></div>
-      <div class="filter-field" id="trend-board-field" hidden><label for="trend-board">School board</label><select id="trend-board"><option value="all">All matching boards</option></select></div>
       <div class="filter-field" id="language-field"><label for="language">School system</label><select id="language"><option value="en">English-language</option><option value="fr">French-language</option></select></div>
       <button id="more-filters" class="button secondary" aria-expanded="false" aria-controls="advanced-filters">More filters</button>
     </div>
-    <section id="advanced-filters" aria-label="More filters" hidden>
+    <section id="advanced-filters" aria-label="Additional filters" hidden>
+      <div class="filter-field" id="trend-board-field" hidden><label for="trend-board">School board</label><select id="trend-board"><option value="all">All matching boards</option></select></div>
       <div class="filter-field"><label for="boardType">Board type</label><select id="boardType"><option value="all">All district boards</option><option value="Public">Public</option><option value="Catholic">Catholic</option><option value="Other authority">Other authorities</option><option value="everything">All boards & authorities</option></select></div>
       <div class="filter-field" id="trend-minimum-field" hidden><label for="trend-minimum">Participants in both years</label><select id="trend-minimum"><option value="0">All reported group sizes</option><option value="20">At least 20 per subject</option><option value="30">At least 30 per subject</option><option value="50">At least 50 per subject</option><option value="100">At least 100 per subject</option></select></div>
       <label class="trend-consistent" id="trend-consistent-field" hidden><input id="trend-consistent" type="checkbox">All three moving in the same direction</label>
       <button id="reset-filters" class="text-button">Reset extra filters</button>
     </section>
+    <div id="active-filters" class="chips" aria-label="Active filters" hidden></div>
     <div id="notice" class="notice" hidden></div>
     <div id="content"></div>
   </div>
-  <footer><div>EQAO Explorer is an independent view of public data.<br>Snapshot downloaded 6 October 2026.</div><div class="footer-links"><button id="footer-source" data-view="sources">Sources & definitions</button><button data-view="archive">Historical archive · 2017–19</button><button id="export">Download CSV ↓</button></div></footer>
+  <footer><div>EQAO Explorer is an independent view of public data.<br>Snapshot downloaded 6 October 2026.</div><div class="footer-links"><button id="footer-about" aria-haspopup="dialog" aria-controls="about-dialog">About EQAO</button><button id="footer-source" data-view="sources">Sources & definitions</button><button data-view="archive">Historical archive · 2017–19</button><button id="export">Download CSV ↓</button></div></footer>
 </main>
 </div>
 <dialog id="school-dialog"><button class="dialog-close" aria-label="Close school details">×</button><div id="school-detail"></div></dialog>
+<dialog id="about-dialog" aria-labelledby="about-title">
+  <button class="dialog-close" aria-label="Close About EQAO" autofocus>×</button>
+  <h2 id="about-title">About EQAO</h2>
+  <p>EQAO stands for the <strong>Education Quality and Accountability Office</strong>. It is Ontario’s provincial agency for assessing student achievement in reading, writing and mathematics at key stages of school, based on the Ontario curriculum.</p>
+  <p>Its mandate is to help improve the quality and accountability of Ontario’s education system. It develops student assessments, publishes reliable results, and helps educators, families and the public use that information to support student learning.</p>
+  <p><a href="https://www.eqao.com/" target="_blank" rel="noopener">Visit the official EQAO website ↗</a><br><a href="https://www.eqao.com/about-eqao/who-we-are/" target="_blank" rel="noopener">Read EQAO’s mandate ↗</a></p>
+  <p class="small muted">EQAO Explorer is an independent project and is not affiliated with EQAO.</p>
+</dialog>
 <div id="toast" role="status" class="toast" hidden></div>
 </body>
 </html>

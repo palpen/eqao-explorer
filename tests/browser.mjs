@@ -51,7 +51,7 @@ await page.locator('#board-search').fill('there is no such school board');assert
 await page.locator('#board-search').fill('');await page.locator('[data-sort="2"]').click();
 const tool=await page.evaluate(()=>({valid:window.eqaoTool.execute({}).rows.length,invalid:(()=>{try{window.eqaoTool.execute({bad:true});return false}catch{return true}})()}));assert.equal(tool.valid,60);assert.equal(tool.invalid,true);
 await page.locator('#views [data-view="trends"]').click();await page.locator('[data-view="schools"]').click();await page.locator('#school-table tbody tr').first().waitFor();await page.locator('#school-search').fill('Woodbridge');
-await page.locator('[data-school]').first().click();await page.locator('#school-trend svg').waitFor();await page.screenshot({path:root+'/tests/school-detail.png'});await page.locator('.dialog-close').click();
+await page.locator('[data-school]').first().click();await page.locator('#school-trend svg').waitFor();await page.screenshot({path:root+'/tests/school-detail.png'});await page.locator('#school-dialog .dialog-close').click();
 await page.locator('[data-view="archive"]').click();await page.locator('#archive-summary table').waitFor();assert.match(await page.locator('#notice').textContent(),/unweighted/);await page.locator('#year').selectOption('2018');await page.locator('#school-table').waitFor();await page.locator('#toast').waitFor({state:'hidden'});await page.screenshot({path:root+'/tests/archive.png'});
 await page.locator('[data-view="sources"]').click();assert.equal(await page.locator('.source-list li').count(),31);await page.screenshot({path:root+'/tests/sources.png'});
 for(const filename of ['audit.json','calculation-audit.json','publisher-audit.json']){

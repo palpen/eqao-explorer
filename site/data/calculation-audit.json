@@ -16,7 +16,7 @@
   "code": [
     {
       "path": "site/app.js",
-      "sha256": "2428f2d24b16a34d3b8f079987f9b197de186b59cbf018693dd62b9f9de7976f"
+      "sha256": "633f12a554bef0bf5dc9e649e02ebc890fc19521cc813197a87e05b2fb6819be"
     },
     {
       "path": "site/school.js",
@@ -24,7 +24,7 @@
     },
     {
       "path": "site/trends.js",
-      "sha256": "b457e0ae45e32c34743a4859c2c145422574a1b6af15ebee5a2110cc62f492d8"
+      "sha256": "0a82f8c08cd6781f4006b420901d0562801ada4259e2094a67087bab1c438ef9"
     }
   ],
   "checks": [

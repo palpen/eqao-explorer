@@ -20,7 +20,7 @@ async function choose(id){
   await page.waitForFunction(id=>document.querySelector('#section-label').textContent.includes(id),id);
 }
 await page.goto(base);await page.locator('#trend-period').waitFor();
-assert.match(await page.locator('#page-title').textContent(),/Where are results moving/);
+assert.match(await page.locator('#page-title').textContent(),/School result trends/);
 assert.equal(await page.locator('#school-picker-search').isVisible(),false,'School search starts collapsed');
 assert.equal(await page.locator('#school-change-label').textContent(),'Choose school');
 await page.locator('#choose-school').click();
@@ -37,7 +37,7 @@ await picker.press('ArrowUp');assert.equal(await picker.getAttribute('aria-activ
 await picker.press('Escape');assert.equal(await picker.getAttribute('aria-expanded'),'false');
 await picker.press('ArrowDown');assert.equal(await picker.getAttribute('aria-expanded'),'true');
 await picker.fill('No such Ontario school at all');assert.match(await page.locator('#picker-count').textContent(),/No schools found/);
-await picker.press('Enter');assert.match(await page.locator('#page-title').textContent(),/Where are results moving/);
+await picker.press('Enter');assert.match(await page.locator('#page-title').textContent(),/School result trends/);
 await picker.fill('');assert.equal(await page.locator('#school-picker-results').isVisible(),false);
 await page.locator('#school-picker-search').fill('123838');await page.keyboard.press('Enter');await waitSchool();
 const school=latest.find(s=>s.id==='123838'),old=older.find(s=>s.id===school.id),province=core.province.find(r=>r.year===2026&&r.grade===3&&r.language==='en');

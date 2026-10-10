@@ -41,6 +41,7 @@ try{
   await page.goForward();await school();assert.equal((await saved()).school,id);
   await page.reload();await school();
   await page.locator('#views [data-view="trends"]').click();await trends();
+  if(!(await page.locator('#advanced-filters').isVisible()))await page.locator('#more-filters').click();
   await page.locator('#language').selectOption('fr');await trends();
   await page.locator('[data-view="myschool"]').click();await school();
   assert.match(await page.locator('#page-description').textContent(),/English-language/,'Selected school restores its own language benchmark');

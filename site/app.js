@@ -27,13 +27,35 @@ function syncFilters(displayView){
   $('#trend-minimum-field').hidden=!trends;$('#trend-consistent-field').hidden=!trends;
   $('#trend-subject').value=state.trendSubject;$('#trend-minimum').value=state.trendMinimum;
   $('#trend-consistent').checked=state.trendConsistent;$('#trend-consistent').disabled=state.trendSubject!=='all';
-  const active=Number(state.type!=='all')+(trends?Number(state.trendMinimum>0)+Number(state.trendConsistent&&state.trendSubject==='all'):0);
-  $('#more-filters').textContent=`More filters${active?` · ${active} active`:''} ${ui.moreFilters?'−':'+'}`;
+  const languageParent=trends?$('#advanced-filters'):$('#filter-bar');
+  if($('#language-field').parentElement!==languageParent){
+    if(trends)languageParent.prepend($('#language-field'));
+    else languageParent.insertBefore($('#language-field'),$('#more-filters'));
+  }
+  $('#language').value=state.language;$('#boardType').value=state.type;
+  const active=Number(state.type!=='all')+(trends?Number(state.language!=='en')+Number(state.trendBoard!=='all')+Number(state.trendMinimum>0)+Number(state.trendConsistent&&state.trendSubject==='all'):0);
+  $('#more-filters').textContent=`${trends?'Filters':'More filters'}${active?` · ${active}`:''} ${ui.moreFilters?'−':'+'}`;
   $('#more-filters').setAttribute('aria-expanded',String(ui.moreFilters));
   $('#advanced-filters').hidden=school||sources||!ui.moreFilters;
+  const filters=[];
+  if(trends){
+    if(state.language!=='en')filters.push(['language',languageLabel(state.language)]);
+    if(state.trendBoard!=='all')filters.push(['trendBoard',board(state.trendBoard)?.name||state.trendBoard]);
+    if(state.type!=='all')filters.push(['type',$('#boardType').selectedOptions[0].textContent]);
+    if(state.trendMinimum>0)filters.push(['trendMinimum',`At least ${state.trendMinimum} participants per subject`]);
+    if(state.trendConsistent&&state.trendSubject==='all')filters.push(['trendConsistent','All subjects moving together']);
+  }
+  $('#active-filters').hidden=!filters.length;
+  $('#active-filters').innerHTML=filters.map(([key,label])=>`<span class="chip"><span>${esc(label)}</span><button type="button" data-remove-filter="${key}" aria-label="Remove ${esc(label)} filter">×</button></span>`).join('');
 }
 $('#more-filters').onclick=()=>{ui.moreFilters=!ui.moreFilters;syncFilters(state.view)};
-$('#reset-filters').onclick=()=>{state.type='all';state.trendMinimum=0;state.trendConsistent=false;$('#boardType').value=state.type;render()};
+$('#reset-filters').onclick=()=>{state.type='all';state.trendMinimum=0;state.trendConsistent=false;if(state.view==='trends'){state.language='en';state.trendBoard='all'}ui.trendLimit=5;render()};
+$('#active-filters').onclick=e=>{
+  const button=e.target.closest('[data-remove-filter]');if(!button)return;
+  const key=button.dataset.removeFilter;
+  state[key]=defaultState()[key];ui.trendLimit=5;render();$('#more-filters').focus();
+};
+$('#advanced-filters').onkeydown=e=>{if(e.key==='Escape'){ui.moreFilters=false;syncFilters(state.view);$('#more-filters').focus()}};
 $('#grades').onclick=e=>{const b=e.target.closest('[data-grade]');if(b)setGrade(+b.dataset.grade)};
 $('#subjects').onclick=e=>{const b=e.target.closest('[data-subject]');if(b){state.subject=+b.dataset.subject;render()}};
 $('#year').onchange=e=>{state.year=+e.target.value;render()};
@@ -112,8 +134,9 @@ function render(){
   $$('[data-view]').forEach(b=>{const on=b.dataset.view===state.view||(b.closest('#views')&&b.dataset.view==='trends'&&state.view==='schools');b.classList.toggle('active',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   $('#explore-views').hidden=!['trends','schools'].includes(displayView);
   const titles={myschool:['SELECTED SCHOOL','Start with your school.','See how it’s doing, follow the changes, and find useful questions to ask.'],boards:['BOARD COMPARISON','A clearer view of achievement.','Compare Ontario’s school boards and follow results over time.'],schools:['SCHOOL EXPLORER','Look closer, school by school.','Find a school, compare its results, and explore its recent history.'],archive:['HISTORICAL ARCHIVE','Before the digital assessments.','Explore the oldest province-wide raw school results located in the current public catalogues.'],sources:['SOURCES & COVERAGE','Know what is behind the numbers.','Original files, definitions, data coverage, and reproducible downloads.']};
-  titles.trends=['SCHOOL TRENDS','Where are results moving?','Explore the largest annual changes and the patterns across schools.'];
+  titles.trends=['SCHOOL TRENDS','School result trends',''];
   const title=titles[displayView];$('#section-label').textContent=title[0];$('#page-title').textContent=title[1];$('#page-description').textContent=title[2];
+  $('#section-label').hidden=displayView==='trends';$('#page-description').hidden=displayView==='trends';
   syncFilters(displayView);$('#export').hidden=state.view==='sources';$('#export').disabled=false;
   $('#choose-school').hidden=['sources','archive'].includes(displayView);
   document.body.classList.toggle('school-home',displayView==='myschool');
@@ -295,7 +318,12 @@ function exportCSV(){
 document.addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b){setView(b.dataset.view);$('#main').scrollIntoView({block:'start'})}});
 $('#export').onclick=exportCSV;
 $('#school-dialog').addEventListener('close',()=>{schoolChartRedraw=null});
-$('.dialog-close').onclick=()=>$('#school-dialog').close();$('#school-dialog').onclick=e=>{if(e.target===$('#school-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}};
+$('#footer-about').onclick=()=>$('#about-dialog').showModal();
+for(const id of ['school-dialog','about-dialog']){
+  const dialog=$(`#${id}`);
+  $(`#${id} .dialog-close`).onclick=()=>dialog.close();
+  dialog.onclick=e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close()}};
+}
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{chartRedraw?.();schoolChartRedraw?.()},150)});
 // An optional browser agent surface uses the same filters and export rows as the UI.
 if(document.modelContext?.registerTool){
