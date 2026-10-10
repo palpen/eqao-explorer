@@ -73,7 +73,7 @@ const difference=(a,b)=>a===null||a===undefined||b===null||b===undefined?null:a-
 const changeHTML=v=>`<span class="${v===null?'':v>=0?'positive':'negative'}">${delta(v)}</span>`;
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,3500)}
 function refreshUrl(){
-  const p=new URLSearchParams();for(const k of ['view','grade','language','type','year','subject','focus'])p.set(k,state[k]);p.set('pins',state.pins.join(','));
+  const p=new URLSearchParams();const incoming=new URLSearchParams(location.search);for(const key of ['comparison','comparisonSubject','comparisonGrade','comparisonYear','reference'])if(incoming.has(key))p.set(key,incoming.get(key));for(const k of ['view','grade','language','type','year','subject','focus'])p.set(k,state[k]);p.set('pins',state.pins.join(','));
   p.set('school',state.school);p.set('compare',state.comparisons.join(','));p.set('distanceSort',state.distanceSort);
   p.set('trendSubject',state.trendSubject);p.set('trendBoard',state.trendBoard);p.set('trendMinimum',state.trendMinimum);p.set('trendConsistent',state.trendConsistent?'1':'0');
   try{localStorage.setItem('eqao-my-school-v1',JSON.stringify({school:state.school,comparisons:state.comparisons,distanceSort:state.distanceSort,grade:state.grade,year:state.view==='archive'?2026:state.year}))}catch{}

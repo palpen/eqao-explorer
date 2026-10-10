@@ -6,6 +6,8 @@ The app is static HTML, CSS, and JavaScript. It has no backend, database, accoun
 
 ## What you can explore
 
+- **Saved schools** is a browser-local shortlist with bookmarks beside school names, search, removal with Undo, and up to 100 saved schools. No account is needed; lists do not sync across devices. Choose two to five saved schools to open a temporary **Compare schools** screen. Every selected school has equal status; My school, its existing comparisons and its filters stay unchanged. An optional reference choice affects only percentage-point differences. Comparison filters are separate; Back returns to the previous explorer context, and refresh preserves the temporary comparison through its URL.
+
 - **Choose school / Change school** opens one searchable school picker. Click a result or use arrow keys and Enter. **Clear school** clears the school and comparisons and returns to Explore schools. School, grade/year, and comparison choices are saved locally and shareable through the URL; Back and Forward restore navigation and filters.
 - A single filter area for grade, year, subject, language system, and school board as applicable. **More filters** contains board type, participant minimum, and the all-subject direction filter, with a visible active-filter count and reset action.
 - Three combined subject panels show the current school percentage, annual change, Ontario comparison, and a compact historical chart. The panels share a 0–100% scale, align on desktop, and stack on phones. Focusing or tapping a chart point shows its year-specific fully participating student count. Reading is blue, writing terracotta, and mathematics purple.
