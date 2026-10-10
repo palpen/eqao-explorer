@@ -16,11 +16,11 @@
   "code": [
     {
       "path": "site/app.js",
-      "sha256": "63815a40e7c06199891c1c43c17002170cff9fbd277643f64ce9bc858b4f5300"
+      "sha256": "8a60dffdff5098347fe155bd480775d8ebac66f0361a9ddb0a7bd4d6967c7cbc"
     },
     {
       "path": "site/school.js",
-      "sha256": "52c2b0b4ee8ce2335df94e8f30bb6eff5aa5761b5adbbcc447eb61e7cd8d0daa"
+      "sha256": "5cd2af504421e1a1f034dfe59a5e6851216ae86cb777c8f5b85501b5e1e38626"
     },
     {
       "path": "site/trends.js",

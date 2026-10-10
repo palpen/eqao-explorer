@@ -33,9 +33,11 @@ function updateSchoolPicker(){
   updateSchoolChooserLabel();
 }
 function updateSchoolChooserLabel(){
-  $('#school-change-label').textContent=$('#school-chooser').open?'Close search':schoolInfo(state.school)?'Change school':'Choose school';
-  $('#choose-school').textContent=$('#school-change-label').textContent;
-  $('#choose-school').setAttribute('aria-expanded',String($('#school-chooser').open));
+  const open=$('#school-chooser').open;
+  $('#school-change-label').textContent=open?'Close search':schoolInfo(state.school)?'Change school':'Find your school';
+  $('#choose-school').textContent=open?'Close search':'Change school';
+  $('#choose-school').setAttribute('aria-expanded',String(open));
+  if($('#welcome-choose')){$('#welcome-choose').textContent=open?'Close search':'Find your school';$('#welcome-choose').setAttribute('aria-expanded',String(open))}
 }
 $('#choose-school').onclick=()=>{const chooser=$('#school-chooser');chooser.open=!chooser.open;if(chooser.open)$('#school-picker-search').focus()};
 function updatePickerActive(){
@@ -60,7 +62,7 @@ $('#clear-school').onclick=()=>{
   state.school='';state.comparisons=[];state.expanded=null;state.view='trends';ui.schoolDetails.clear();
   if(state.year<2022)state.year=2026;
   $('#school-chooser').open=false;$('#school-picker-search').value='';
-  updateSchoolPicker();render();$('#choose-school').focus();
+  updateSchoolPicker();render();$('#views [data-view="trends"]').focus();
   toast('School selection cleared.');
 };
 $('#school-picker-search').oninput=updateSchoolPicker;
@@ -146,7 +148,6 @@ async function renderMySchool(token){
     if(state.expanded===null&&state.comparisons.length)state.expanded=0;
     $('#page-title').textContent=r?.name||meta.name;
     $('#page-description').textContent=`${board(r?.board||meta.board)?.name||'Board unavailable'} · ${meta.city||'Ontario'} · ${languageLabel(meta.language)} · ${board(r?.board||meta.board)?.type||'Other authority'}`;
-    $('#section-label').textContent=`SELECTED SCHOOL / ${meta.id}`;
     renderSchoolLocation(meta,token);
     $('#export').hidden=false;
     $('#content').innerHTML=`

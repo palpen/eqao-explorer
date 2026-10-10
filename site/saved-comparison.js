@@ -30,7 +30,7 @@
     if(!context)return;const prior=context.returnContext;context=null;request++;chart=null;setVisible(false);
     try{sessionStorage.removeItem(KEY);}catch{}
     const cleanRoute=new URLSearchParams(location.search);for(const key of ['comparison','comparisonSubject','comparisonGrade','comparisonYear','reference'])cleanRoute.delete(key);history.replaceState({eqao:clone(state)},'',`${location.pathname}?${cleanRoute}`);
-    if(restore){Object.assign(state,prior.state);ui.schoolDetails=new Set(prior.details||[]);pushNavigation=false;const restored=new URL(prior.url,location.origin);for(const key of ['comparison','comparisonSubject','comparisonGrade','comparisonYear','reference'])restored.searchParams.delete(key);history.replaceState({eqao:clone(state)},'',restored.pathname+restored.search);updateSchoolPicker();render();setTimeout(()=>{window.scrollTo({top:prior.scroll||0,behavior:'instant'});$('#choose-school')?.focus({preventScroll:true});},50);}
+    if(restore){Object.assign(state,prior.state);ui.schoolDetails=new Set(prior.details||[]);pushNavigation=false;const restored=new URL(prior.url,location.origin);for(const key of ['comparison','comparisonSubject','comparisonGrade','comparisonYear','reference'])restored.searchParams.delete(key);history.replaceState({eqao:clone(state)},'',restored.pathname+restored.search);updateSchoolPicker();render();setTimeout(()=>{window.scrollTo({top:prior.scroll||0,behavior:'instant'});const target=!$('#choose-school').hidden?$('#choose-school'):$('#views .navitem.active');target?.focus({preventScroll:true});},50);}
   }
   async function draw(){
     if(!context)return;chart=null;const token=++request,c=context;

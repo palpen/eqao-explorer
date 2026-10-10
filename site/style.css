@@ -283,7 +283,7 @@ dialog::backdrop { background: #25282466; }
 .school-context select { font-size: .8125rem; }
 .school-home #side-controls, .school-home .toolbar { display: none; }
 .school-home h1 { font-size: clamp(2.2rem, 3.5vw, 3.5rem); }
-.welcome-panel { padding: 46px 0 24px; max-width: 900px; }
+.welcome-panel { padding: 0 0 24px; max-width: 900px; }
 .welcome-panel > p { color: var(--muted); max-width: 650px; font-size: .9375rem; }
 .welcome-panel h2 { font-size: 2.4rem; max-width: 700px; }
 .welcome-steps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 30px; margin: 40px 0; }
@@ -406,7 +406,7 @@ dialog::backdrop { background: #25282466; }
   .card-benchmarks strong { margin: 0; }
   .card-gap { font-size: .625rem; }
   .welcome-steps, .achievement-grid, .support-items { grid-template-columns: 1fr; gap: 20px; }
-  .welcome-panel { padding-top: 32px; }
+  .welcome-panel { padding-top: 0; }
   .welcome-panel h2 { font-size: 2rem; }
   .welcome-panel > p { font-size: .8125rem; }
   .comparison-search { flex-direction: column; align-items: stretch; gap: 8px; }
