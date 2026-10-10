@@ -562,6 +562,7 @@ main { max-width: 1220px; padding: 42px 40px 25px; }
 .school-life { padding: 0; margin: 25px 0; }
 #expanded-subject { background: #f5f5f0; scroll-margin-top: 20px; }
 #expanded-subject .panel-head { align-items: center; }
+.comparison-subjects { max-width: 440px; }
 .board-overview { padding: 2px 0 25px; }
 .board-overview > div { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
 .board-overview > div p { display: flex; align-items: baseline; gap: 15px; margin: 0; }
@@ -574,8 +575,7 @@ main { max-width: 1220px; padding: 42px 40px 25px; }
 .trend-summary .trend-cards { margin-bottom: 24px; }
 .trend-summary .stat { color: var(--navy); font-size: clamp(2.5rem, 4vw, 3.25rem); line-height: 1.15; }
 .trend-unit { display: inline-block; margin-left: .4rem; font-family: inherit; font-size: 1rem; font-weight: 400; letter-spacing: 0; }
-.trend-summary .trend-metric-label { margin: 8px 0 2px; font-size: 1rem; }
-.trend-summary .trend-sample { margin: 0; font-size: .8125rem; color: var(--muted); }
+.trend-summary .trend-metric-label { margin: 8px 0 0; font-size: 1rem; }
 .trend-direction-bar { display: flex; width: 100%; max-width: 600px; height: 6px; overflow: hidden; border-radius: 3px; background: var(--line); margin-bottom: 12px; }
 .direction-fill-up, .direction-up i { background: var(--teal); }
 .direction-fill-flat, .direction-flat i { background: #999f94; }
@@ -584,8 +584,6 @@ main { max-width: 1220px; padding: 42px 40px 25px; }
 .trend-direction > span { display: inline-flex; align-items: center; color: var(--muted); }
 .trend-direction i { width: 6px; height: 6px; border-radius: 50%; margin-right: 7px; }
 .trend-direction strong { color: var(--navy); font-weight: 500; }
-.trend-summary .trend-province { font-size: .8125rem; color: var(--muted); margin: 0; }
-.trend-province strong { font-weight: 500; }
 .trend-coverage-details.trend-method { border-block: 1px solid var(--line); margin: 0; padding: 0; font-size: .8125rem; }
 .trend-coverage-details > summary { padding: 18px 0; min-height: 48px; }
 .trend-about-body { max-width: 80ch; padding-bottom: 18px; }

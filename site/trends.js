@@ -48,7 +48,7 @@ function trendRankingHTML(rows,direction,scale,subject){
       <p class="ranking-board">${esc(board(r.board)?.name||r.board)}${r.city?` · ${esc(r.city)}`:''}</p>
       <div class="ranking-bar-track" aria-hidden="true"><div class="ranking-bar ${direction}" style="width:${100*Math.abs(row.change)/scale}%"></div></div>
       <p class="ranking-result">${all?'Subject mean: ':''}${pct(row.before)} → ${pct(row.after)}</p>
-      <p class="ranking-participants">${all?'Smallest subject group':'Participants'}: ${number(row.beforeParticipants)} → ${number(row.afterParticipants)}${row.beforeParticipants!==null&&row.afterParticipants!==null&&Math.min(row.beforeParticipants,row.afterParticipants)<30?' · Small group':''}</p>
+      ${all?'':`<p class="ranking-participants">Participants: ${number(row.beforeParticipants)} → ${number(row.afterParticipants)}${row.beforeParticipants!==null&&row.afterParticipants!==null&&Math.min(row.beforeParticipants,row.afterParticipants)<30?' · Small group':''}</p>`}
       <details class="ranking-details"><summary>Results and participant counts</summary><div class="table-wrap"><table><thead><tr><th>Subject</th><th>${yearLabel(state.year-1)}</th><th>${yearLabel(state.year)}</th><th>Change</th></tr></thead><tbody>${subjects.map((s,i)=>`<tr><th scope="row">${s}</th><td>${rawLabel(old,i)}<small>${number(old.participants?.[i])} participants</small></td><td>${rawLabel(r,i)}<small>${number(r.participants?.[i])} participants</small></td><td>${delta(changes[i])}</td></tr>`).join('')}</tbody></table></div></details>
     </li>`;
   }).join('')}</ol>`;
@@ -79,10 +79,9 @@ async function renderSchoolTrends(token){
       ${hasPrevious?'':`<div class="notice"><strong>Previous-year comparison unavailable.</strong> The current series begins in ${yearLabel(data.years[0])}. No ${yearLabel(state.year-1)} results are included; the historical archive is kept separate.</div>`}
       <section class="trend-summary" aria-label="Change summary">
         <p class="trend-period" id="trend-period">Change from ${yearLabel(state.year-1)} to ${yearLabel(state.year)}</p>
-        <div class="trend-cards"><div class="stat">${delta(summary.median).replace(' pp','<span class="trend-unit"> percentage points</span>')}</div><p class="trend-metric-label">Median school change</p><p class="trend-sample">Across ${number(n)} schools</p></div>
+        <div class="trend-cards"><div class="stat">${delta(summary.median).replace(' pp','<span class="trend-unit"> percentage points</span>')}</div><p class="trend-metric-label">Median school change across ${number(n)} schools</p></div>
         <div class="trend-direction-bar" aria-hidden="true">${[['up',summary.up],['flat',summary.flat],['down',summary.down]].map(([key,count])=>`<span class="direction-fill-${key}" style="width:${n?100*count/n:0}%"></span>`).join('')}</div>
         <div class="trend-direction" id="trend-direction">${[['up','Increasing',summary.up],['flat','Unchanged',summary.flat],['down','Decreasing',summary.down]].map(([key,label,count])=>`<span class="direction-${key}"><i aria-hidden="true"></i>${label} <strong>${trendShare(count,n)}</strong></span>`).join('')}</div>
-        <p class="trend-province">Ontario change: <strong>${delta(provinceChange).replace(' pp',' percentage points')}</strong></p>
       </section>
       <details class="trend-coverage-details trend-method" ${ui.trendDetails?'open':''}><summary>About these results</summary><div class="trend-about-body">
         <p class="small muted" id="trend-coverage" role="status">${number(n)} of ${number(total)} schools eligible. Excluded: ${number(excluded.missing)} without exact paired results${all?' in all three subjects':''}; ${number(excluded.participants)} below the participant minimum or with unavailable counts; ${number(excluded.direction)} with mixed or unchanged subject directions.</p>

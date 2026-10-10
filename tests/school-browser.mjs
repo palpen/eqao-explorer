@@ -87,8 +87,36 @@ assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),4)
 assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series="Selected school"]').getAttribute('stroke'),schoolStrokes[0]);
 assert.equal(await page.locator('[data-overview-subject="0"] .card-benchmarks').textContent(),initialOntario);
 assert.equal(await page.locator('#relative-progress tbody tr').count(),3);
+// Switch subjects inside the comparison, preserving peers and the open values table.
+await page.locator('#expanded-subject details summary').click();
+const comparisonHistory=await Promise.all(core.years.map(async year=>({year,rows:JSON.parse(await fs.readFile(`${root}/site/data/schools-${year}-3.json`,'utf8'))})));
+for(const subject of [2,1,0]){
+  const button=page.locator(`[data-comparison-subject="${subject}"]`);
+  await button.focus();await page.keyboard.press('Enter');
+  assert.equal(await button.getAttribute('aria-pressed'),'true');
+  assert.equal(await button.evaluate(el=>el===document.activeElement),true);
+  assert.equal(await page.locator(`[data-expand-subject="${subject}"]`).getAttribute('aria-expanded'),'true');
+  assert.equal(await page.locator('#expanded-subject details').evaluate(el=>el.open),true);
+  assert.equal(await page.locator(`#comparison-chips [data-remove-peer="${peerId}"]`).count(),1);
+  assert.equal(await page.locator('#line-ontario').isChecked(),true);
+  assert.equal(await page.locator('#line-board').isChecked(),true);
+  for(const {year,rows} of comparisonHistory){
+    const own=rows.find(r=>r.id===school.id&&r.language===school.language);
+    const peer=rows.find(r=>r.id===peerId&&r.language===school.language);
+    const expected=[own,core.province.find(r=>r.year===year&&r.grade===3&&r.language===school.language),core.results.find(r=>r.id===own?.board&&r.year===year&&r.grade===3&&r.language===school.language),peer].map(r=>r?.values[subject]??null);
+    const row=page.locator('#expanded-subject tbody tr').nth(core.years.indexOf(year));
+    assert.deepEqual(await row.locator('td').allTextContents(),expected.map(v=>v===null?'—':pct(v)));
+    const names=['Selected school','Ontario','School board',latest.find(r=>r.id===peerId).name];
+    for(let j=0;j<names.length;j++)if(Number.isFinite(expected[j]))assert.equal(await page.locator('#expanded-school-chart').getByRole('button',{name:`${names[j]} · ${year-1}–${String(year).slice(-2)} · ${pct(expected[j])}`,exact:true}).count(),1);
+  }
+}
 await page.locator('#line-board').uncheck();assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),3);
 await page.locator('#line-ontario').uncheck();assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),2);
+await page.locator('[data-comparison-subject="2"]').click();
+assert.equal(await page.locator('#line-board').isChecked(),false);
+assert.equal(await page.locator('#line-ontario').isChecked(),false);
+assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),2);
+await page.locator('[data-comparison-subject="0"]').click();
 await page.locator('#line-ontario').check();await page.locator('#line-board').check();
 // Full comparison counts keep every line and direct label readable.
 for(let n=0;n<3;n++)await page.locator('[data-compare-school][aria-pressed="false"]').first().click();
@@ -120,6 +148,9 @@ assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series=
 await page.locator('#expanded-school-chart circle').first().focus();await page.keyboard.press('Enter');assert.match(await page.locator('#expanded-school-readout').textContent(),/Selected school.*2021–22/);
 for(const width of [1024,390,320]){
   await page.setViewportSize({width,height:900});await page.waitForTimeout(200);
+  await page.locator('[data-comparison-subject="2"]').click();
+  assert.equal(await page.locator('[data-comparison-subject="2"]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-comparison-subject="1"]').click();
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`School dashboard fits ${width}px`);
   const cardTops=await page.locator('.subject-card').evaluateAll(cards=>cards.map(c=>c.getBoundingClientRect().top));
   assert.ok(width>760?cardTops.every(top=>Math.abs(top-cardTops[0])<1):cardTops.every((top,i)=>i===0||top>cardTops[i-1]),'Subject panels align on desktop and stack on phones');

@@ -20,11 +20,11 @@
     },
     {
       "path": "site/school.js",
-      "sha256": "b8e3b23288758f0c8c2b027225d0ab654909f6b09f6774081bf2bc3e0d78db64"
+      "sha256": "a437da8b3e3c3b5b4c5498e2d7cad1e8021fc485924c47cb895a82b64bc11ac8"
     },
     {
       "path": "site/trends.js",
-      "sha256": "0a82f8c08cd6781f4006b420901d0562801ada4259e2094a67087bab1c438ef9"
+      "sha256": "c6f29245e05cfb14525f422faf87277fa867376325cbbddbfa29330d6013ff8a"
     }
   ],
   "checks": [
