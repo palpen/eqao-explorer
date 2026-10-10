@@ -120,6 +120,7 @@ for(const link of $$('.brand'))link.onclick=event=>{
 function render(){
   if(!data)return;
   const token=++renderToken;chartRedraw=null;schoolChartRedraw=null;
+  clearSchoolLocation();
   const displayView=state.view;
   if(displayView==='myschool'&&schoolInfo(state.school)){state.language=schoolInfo(state.school).language;$('#language').value=state.language}
   const rs=results().sort((a,b)=>a.name.localeCompare(b.name));

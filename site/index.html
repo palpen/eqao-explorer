@@ -6,7 +6,7 @@
   <title>EQAO Explorer · Ontario</title>
   <meta name="description" content="Understand your child's school: Grade 3 and Grade 6 EQAO results, trends, Ontario and board benchmarks, and nearby school comparisons.">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%2312243d'/%3E%3Cpath d='M9 29V20h5v9m4 0V13h5v16m4 0V7h5v22' stroke='%2383c3ff' stroke-width='4'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css"><script src="app.js" defer></script><script src="school.js" defer></script><script src="trends.js" defer></script>
+  <link rel="stylesheet" href="style.css"><script src="app.js" defer></script><script src="school.js" defer></script><script src="school-map.js" defer></script><script src="trends.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to results</a>
@@ -14,7 +14,14 @@
 <div class="app-shell">
 <main id="main" tabindex="-1">
   <nav id="explore-views" aria-label="Explore schools" hidden><button data-view="trends">School trends</button><button data-view="schools">Find schools</button></nav>
-  <div class="page-heading"><div><p class="eyebrow" id="section-label" hidden>SCHOOL TRENDS</p><h1 id="page-title">School result trends</h1><p id="page-description" hidden></p></div><button id="choose-school" class="button secondary" aria-expanded="false" aria-controls="school-chooser">Choose school</button></div>
+  <div id="school-heading-layout">
+    <div class="page-heading"><div><p class="eyebrow" id="section-label" hidden>SCHOOL TRENDS</p><h1 id="page-title">Understand Ontario’s school results</h1><p id="page-description">Grade 3 and 6 EQAO results in reading, writing and math.<br>See how results change over time and compare schools and boards.</p></div><button id="choose-school" class="button secondary" aria-expanded="false" aria-controls="school-chooser">Choose school</button></div>
+    <section id="school-location" aria-labelledby="school-location-title" hidden>
+      <div class="school-map-heading"><h2 id="school-location-title">School location</h2><div class="school-map-actions"><button id="school-map-recenter" type="button" disabled>Recenter</button><a id="school-map-link" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div>
+      <p id="school-map-status" role="status"></p>
+      <div id="school-map" role="region" aria-label="Interactive school location map" hidden></div>
+    </section>
+  </div>
   <section class="school-selector" aria-label="Choose your school">
     <details id="school-chooser"><summary id="chosen-school-label"><span id="selected-school-name">Explore Ontario schools</span><span id="school-change-label" class="school-change-action">Choose school</span></summary><div class="school-picker-fields"><label for="school-picker-search">Find your school</label><input id="school-picker-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="school-picker-results" aria-describedby="school-picker-hint picker-count" autocomplete="off" placeholder="School name or city…"><p id="school-picker-hint" class="small muted">Search by school name, city, board or school number.</p><div id="school-picker-results" class="school-picker-results" role="listbox" aria-label="Matching schools" hidden></div><p id="picker-count" class="small muted" role="status">Loading schools…</p><button type="button" id="clear-school" class="text-button" hidden>Clear school</button></div></details>
   </section>

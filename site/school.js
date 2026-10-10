@@ -148,6 +148,7 @@ async function renderMySchool(token){
     $('#page-title').textContent=r?.name||meta.name;
     $('#page-description').textContent=`${board(r?.board||meta.board)?.name||'Board unavailable'} · ${meta.city||'Ontario'} · ${languageLabel(meta.language)} · ${board(r?.board||meta.board)?.type||'Other authority'}`;
     $('#section-label').textContent=`SELECTED SCHOOL / ${meta.id}`;
+    renderSchoolLocation(meta,token);
     $('#export').hidden=false;
     $('#content').innerHTML=`
       <div class="school-overview-caption"><span>Students meeting or exceeding the provincial standard</span><span>Grade ${state.grade} · ${yearLabel(state.year)} · Levels 3 & 4</span></div>
