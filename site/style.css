@@ -562,8 +562,6 @@ main { max-width: 1220px; padding: 42px 40px 25px; }
 .subject-card .chart-key-item { font-size: .6875rem; }
 .subject-card .chart-key-item strong { display: none; }
 .subject-card .chart-readout { font-size: .6875rem; min-height: 35px; padding: 4px 0; }
-.subject-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2px 10px; font-size: .6875rem; color: var(--muted); }
-.subject-actions button { font-size: .75rem; }
 .school-finding { display: grid; grid-template-columns: 150px 1fr; gap: 24px; border-bottom: 1px solid var(--line); padding: 28px 0 18px; }
 .school-finding .eyebrow { padding-top: 4px; }
 .school-finding p { margin-bottom: 8px; font-size: .875rem; }

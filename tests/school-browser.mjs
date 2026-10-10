@@ -98,7 +98,6 @@ for(const subject of [2,1,0]){
   await button.focus();await page.keyboard.press('Enter');
   assert.equal(await button.getAttribute('aria-pressed'),'true');
   assert.equal(await button.evaluate(el=>el===document.activeElement),true);
-  assert.equal(await page.locator(`[data-expand-subject="${subject}"]`).getAttribute('aria-expanded'),'true');
   assert.equal(await page.locator('#expanded-subject details').evaluate(el=>el.open),true);
   assert.equal(await page.locator(`#comparison-chips [data-remove-peer="${peerId}"]`).count(),1);
   assert.equal(await page.locator('#line-ontario').isChecked(),true);
@@ -153,7 +152,7 @@ await page.locator('[data-grade="6"]').click();await waitSchool();
 const g6=JSON.parse(await fs.readFile(root+'/site/data/schools-2026-6.json','utf8')).find(r=>r.id===school.id);
 assert.equal(await page.locator('[data-overview-subject="2"] .stat').textContent(),pct(g6.values[2]));
 await page.locator('[data-grade="3"]').click();await waitSchool();
-await page.locator('[data-expand-subject="1"]').click();await page.locator('#expanded-school-chart svg').waitFor();
+await page.locator('#school-comparisons').evaluate(el=>el.open=true);await page.locator('[data-comparison-subject="1"]').click();await page.locator('#expanded-school-chart svg').waitFor();
 assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series="Selected school"]').getAttribute('stroke'),schoolStrokes[1]);
 await page.locator('#expanded-school-chart').getByRole('button',{name:/^Selected school · 2021–22/}).focus();await page.keyboard.press('Enter');assert.match(await page.locator('#expanded-school-readout').textContent(),/Selected school.*2021–22/);
 for(const width of [1024,390,320]){

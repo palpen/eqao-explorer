@@ -24,9 +24,7 @@ try{
   // Historical points expose the subject-specific count for their own year.
   const history=await Promise.all([2022,2023,2024,2025,2026].map(async year=>({year,row:JSON.parse(await fs.readFile(`site/data/schools-${year}-3.json`,'utf8')).find(r=>r.id===home.id)})));
   for(const subject of [0,1,2]){
-    const footer=page.locator(`[data-overview-subject="${subject}"] .subject-actions span`);
-    const latestCount=history.at(-1).row.participants[subject];
-    assert.equal(await footer.textContent(),`2025–26 · ${latestCount} fully participating students`);
+    assert.equal(await page.locator(`[data-overview-subject="${subject}"] .subject-actions`).count(),0);
     for(const {year,row} of history){
       const label=`Selected school · ${year-1}–${String(year).slice(-2)} · ${row.values[subject]}% · ${row.participants[subject]} fully participating students`;
       const point=page.locator(`#school-chart-${subject}`).getByRole('button',{name:label,exact:true});
@@ -34,7 +32,6 @@ try{
       assert.equal(await page.locator(`#school-readout-${subject}`).textContent(),label);
       await point.focus();await page.keyboard.press('Enter');
       assert.equal(await page.locator(`#school-readout-${subject}`).textContent(),label);
-      assert.equal(await footer.textContent(),`2025–26 · ${latestCount} fully participating students`);
     }
     const province=page.locator(`#school-chart-${subject} circle`).filter({has:page.locator('title',{hasText:'Ontario · 2021–22'})});
     await province.click();
@@ -73,6 +70,7 @@ try{
   assert.match(exported,/Selected comparison/);assert.ok(exported.includes('019735'));
   assert.doesNotMatch(exported,/change_subject|year_change_pp|fully_participating_students/);
   await page.locator('#close-comparison').click();assert.match(await page.locator('.comparison-empty').textContent(),/Choose a subject/);
+  assert.equal(await page.locator('[data-comparison-subject="2"]').evaluate(el=>el===document.activeElement),true);
   await page.locator('[data-comparison-subject="2"]').click();
 
   // Searching for a far-away school does not discard the saved comparison group.
