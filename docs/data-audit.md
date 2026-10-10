@@ -35,12 +35,12 @@ The calculation suite executes the actual functions from the application and com
 | Median board | Middle numeric board result, or mean of the two middle results; each filtered board counts equally |
 | Historical school mean | Arithmetic mean of numeric school percentages, with the correct reporting/listed school counts; unavailable markers excluded |
 | Achievement distribution | Published level percentages retained; segment widths normalized by their rounded total for display |
-| Nearby distance | Haversine distance from published coordinates, checked independently using unit-vector central angles and the same 6,371 km Earth-radius approximation |
+| School distance | Haversine distance from published coordinates, checked independently using unit-vector central angles and the same 6,371 km Earth-radius approximation |
 | Generated questions | Two consecutive declines, three consecutive below/above-Ontario results, or a latest relative change of at least five points; each figure and year checked against the relevant results |
 | Charts and sorting | Numeric plotted values and coordinates, breaks at missing years, complete source-row membership, and unavailable values kept at the end of numeric sorts |
 | CSV exports | Published source values, signed numeric differences, benchmark gaps, participants and source filenames |
 
-Arbitrary peer comparisons use the same verified arithmetic. The exhaustive history checks include one deterministic real peer per school/grade/selected year. Full nearby-table export rendering is tested on a distributed selection of schools plus every school without location-source metadata; it is separate from exhaustive testing of the numerical helpers. The browser suites check real downloads, rendering, controls, French benchmarks, suppression, missing records, and desktop/mobile layouts.
+Arbitrary peer comparisons use the same verified arithmetic. The exhaustive history checks include one deterministic real peer per school/grade/selected year. Full comparison-table export rendering is tested on a distributed selection of schools plus every school without location-source metadata; it is separate from exhaustive testing of the numerical helpers. The browser suites check real downloads, rendering, controls, French benchmarks, suppression, missing records, and desktop/mobile layouts.
 
 ## Corrections made
 

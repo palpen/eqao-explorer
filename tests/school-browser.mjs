@@ -72,9 +72,12 @@ await page.locator('.question-method summary').click();
 await page.locator('#school-achievement > summary').click();
 await page.locator('.grade-overview summary').click();assert.equal(await page.locator('#grade-overview tbody tr').count(),4);
 await page.locator('#school-comparisons > summary').click();
-await page.locator('#near-subject').selectOption('2');assert.match(await page.locator('#nearby-description').textContent(),/mathematics/);
-assert.ok((await page.locator('#nearby-table tbody tr').first().textContent()).includes(pp(school.values[2]-old.values[2])));
-await page.locator('#near-subject').selectOption('0');
+assert.equal(await page.locator('#near-radius, #near-type, #near-subject, #peer-search, #peer-select, #nearby-description').count(),0);
+assert.equal(await page.locator('#comparison-table thead th').count(),6);
+assert.match(await page.locator('#comparison-results-count').textContent(),/3,844 schools/);
+assert.equal(await page.locator('#comparison-table tbody tr').first().getAttribute('data-comparison-row'),school.id);
+for(const value of school.raw)assert.ok((await page.locator('#comparison-table tbody tr').first().textContent()).includes(value));
+assert.equal(await page.locator('#expanded-subject').evaluate(el=>el.compareDocumentPosition(document.querySelector('.comparison-schools'))&Node.DOCUMENT_POSITION_PRECEDING),2,'Chart follows the school picker');
 await page.screenshot({path:root+'/tests/my-school-desktop.png',fullPage:true});
 // Chosen peers affect charts and relative comparisons without averaging them into Ontario.
 const initialOntario=await page.locator('[data-overview-subject="0"] .card-benchmarks').textContent();
@@ -102,12 +105,13 @@ for(const subject of [2,1,0]){
   assert.equal(await page.locator('#line-board').isChecked(),true);
   for(const {year,rows} of comparisonHistory){
     const own=rows.find(r=>r.id===school.id&&r.language===school.language);
-    const peer=rows.find(r=>r.id===peerId&&r.language===school.language);
-    const expected=[own,core.province.find(r=>r.year===year&&r.grade===3&&r.language===school.language),core.results.find(r=>r.id===own?.board&&r.year===year&&r.grade===3&&r.language===school.language),peer].map(r=>r?.values[subject]??null);
+    const peer=rows.find(r=>r.id===peerId);
+    const records=[own,core.province.find(r=>r.year===year&&r.grade===3&&r.language===school.language),core.results.find(r=>r.id===own?.board&&r.year===year&&r.grade===3&&r.language===school.language),peer];
+    const expected=records.map(r=>r?.values[subject]??null);
     const row=page.locator('#expanded-subject tbody tr').nth(core.years.indexOf(year));
     assert.deepEqual(await row.locator('td').allTextContents(),expected.map(v=>v===null?'—':pct(v)));
     const names=['Selected school','Ontario','School board',latest.find(r=>r.id===peerId).name];
-    for(let j=0;j<names.length;j++)if(Number.isFinite(expected[j]))assert.equal(await page.locator('#expanded-school-chart').getByRole('button',{name:`${names[j]} · ${year-1}–${String(year).slice(-2)} · ${pct(expected[j])}`,exact:true}).count(),1);
+    for(let j=0;j<names.length;j++)if(Number.isFinite(expected[j]))assert.equal(await page.locator('#expanded-school-chart').getByRole('button',{name:`${names[j]} · ${year-1}–${String(year).slice(-2)} · ${pct(expected[j])} · ${records[j]?.participants?.[subject]==null?'Participation unavailable':`${records[j].participants[subject].toLocaleString('en-CA')} fully participating students`}`,exact:true}).count(),1);
   }
 }
 await page.locator('#line-board').uncheck();assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),3);
@@ -124,17 +128,23 @@ assert.equal(await page.locator('#expanded-school-chart .trend-line').count(),7)
 const bounds=await page.locator('#expanded-school-chart .end-label').evaluateAll(labels=>labels.map(l=>{const r=l.getBoundingClientRect();return {top:r.top,bottom:r.bottom}}).sort((a,b)=>a.top-b.top));
 for(let n=1;n<bounds.length;n++)assert.ok(bounds[n].top>=bounds[n-1].bottom,'Seven direct chart labels do not overlap');
 while(await page.locator('#comparison-chips [data-remove-peer]').count()>1)await page.locator('#comparison-chips [data-remove-peer]').last().click();
-await page.locator('#near-radius').selectOption('1');assert.equal(await page.locator('#comparison-chips [data-remove-peer]').count(),1);
-assert.match(await page.locator('#nearby-description').textContent(),/within 1 km/);
-await page.locator('#near-type').selectOption('Catholic');assert.match(await page.locator('#nearby-description').textContent(),/Catholic/);
-await page.locator('#near-search').fill('No such school at all');assert.match(await page.locator('#nearby-table').textContent(),/No nearby schools match/);await page.locator('#near-search').fill('');
-// Export includes saved peers even if they are outside the displayed comparison radius/type.
+// Search and distance sorting preserve selected peers, with no radius or language restriction.
+await page.locator('[data-distance-sort]').click();
+assert.equal(await page.locator('#comparison-table th[aria-sort]').getAttribute('aria-sort'),'descending');
+assert.equal(await page.locator('#comparison-chips [data-remove-peer]').count(),1);
+assert.match(await page.locator('#comparison-table tbody tr').nth(1).textContent(),/\d{3,}\.\d km/);
+await page.locator('#comparison-next').click();assert.match(await page.locator('#comparison-results-count').textContent(),/11–20/);
+await page.locator('#comparison-search').fill('No such school at all');assert.match(await page.locator('#comparison-table').textContent(),/No schools match/);
+await page.locator('#comparison-search').fill('Ottawa');
+assert.ok(await page.locator('[data-compare-school]').count()>0,'Schools anywhere in Ontario are available');
+// Export includes saved peers even when a search does not match them.
 const downloadWait=page.waitForEvent('download');await page.locator('#export').click();const download=await downloadWait;await download.saveAs(root+'/tests/school-export.csv');
-const csv=await fs.readFile(root+'/tests/school-export.csv','utf8');assert.match(csv,/Selected comparison/);assert.ok(csv.includes(peerId));assert.match(csv,/fully_participating_students/);
-assert.doesNotMatch(csv,/"'-\d/, 'Negative numeric changes remain numeric in exported CSV');
+const csv=await fs.readFile(root+'/tests/school-export.csv','utf8');assert.match(csv,/Selected comparison/);assert.ok(csv.includes(peerId));assert.match(csv,/distance_km/);assert.doesNotMatch(csv,/change_subject|year_change_pp|fully_participating_students/);
 await page.goto(base);await waitSchool();assert.equal(await page.locator('#page-title').textContent(),school.name);
 assert.equal(await page.locator('#school-picker-search').isVisible(),false,'Reloaded saved school keeps search hidden');
-assert.equal(await page.locator('#comparison-chips [data-remove-peer]').count(),1);assert.equal(await page.locator('#near-radius').inputValue(),'1');
+assert.equal(await page.locator('#comparison-chips [data-remove-peer]').count(),1);
+assert.equal(new URL(page.url()).searchParams.get('distanceSort'),'desc');
+assert.equal(new URL(page.url()).searchParams.has('radius'),false);assert.equal(new URL(page.url()).searchParams.has('nearType'),false);
 // Older selections must never include future results in findings or charts.
 await page.locator('#year').selectOption('2024');await waitSchool();assert.equal(await page.locator('#school-chart-0 circle').count(),6);
 assert.doesNotMatch(await page.locator('#school-conversations').textContent(),/2024–25|2025–26/);
@@ -145,7 +155,7 @@ assert.equal(await page.locator('[data-overview-subject="2"] .stat').textContent
 await page.locator('[data-grade="3"]').click();await waitSchool();
 await page.locator('[data-expand-subject="1"]').click();await page.locator('#expanded-school-chart svg').waitFor();
 assert.equal(await page.locator('#expanded-school-chart .trend-line[data-series="Selected school"]').getAttribute('stroke'),schoolStrokes[1]);
-await page.locator('#expanded-school-chart circle').first().focus();await page.keyboard.press('Enter');assert.match(await page.locator('#expanded-school-readout').textContent(),/Selected school.*2021–22/);
+await page.locator('#expanded-school-chart').getByRole('button',{name:/^Selected school · 2021–22/}).focus();await page.keyboard.press('Enter');assert.match(await page.locator('#expanded-school-readout').textContent(),/Selected school.*2021–22/);
 for(const width of [1024,390,320]){
   await page.setViewportSize({width,height:900});await page.waitForTimeout(200);
   await page.locator('[data-comparison-subject="2"]').click();
@@ -172,12 +182,12 @@ assert.match(await page.locator('#school-conversations').textContent(),/77%.*61%
 assert.match(await page.locator('#school-conversations').textContent(),/Relative change: \+9 pp/);
 await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:root+'/tests/malvern-school-header.png'});
 await page.locator('#school-trends').screenshot({path:root+'/tests/subject-colours.png'});
-await choose('649653');assert.deepEqual(await page.locator('.subject-card .stat').allTextContents(),['No result','No result','No result']);assert.equal(await page.locator('#near-radius').isDisabled(),true);assert.match(await page.locator('#nearby-description').textContent(),/Coordinates and city are unavailable/);
+await choose('649653');assert.deepEqual(await page.locator('.subject-card .stat').allTextContents(),['No result','No result','No result']);assert.match(await page.locator('#comparison-table tbody tr').first().textContent(),/Unavailable/);assert.match(await page.locator('#comparison-results-count').textContent(),/3,844 schools/);
 assert.match(await page.locator('#achievement-context').textContent(),/Ontario school-location source unavailable/);
 assert.equal(await page.locator('#achievement-context a').filter({hasText:'Ontario school-location source'}).count(),0,'No invented location-source link');
 await choose('023549');assert.match(await page.locator('#page-description').textContent(),/French-language/);
 const french=latest.find(s=>s.id==='023549'),fp=core.province.find(r=>r.year===2026&&r.grade===3&&r.language==='fr');
-assert.equal(await page.locator('[data-overview-subject="0"] .card-gap').textContent(),gap(french.values[0]-fp.values[0]));assert.match(await page.locator('#nearby-description').textContent(),/French-language/);
+assert.equal(await page.locator('[data-overview-subject="0"] .card-gap').textContent(),gap(french.values[0]-fp.values[0]));assert.match(await page.locator('#comparison-table tbody tr').first().textContent(),/French-language/);
 await page.goto(new URL('?view=myschool&school=123838&year=2022&grade=6&radius=5&compare=',base).href);await waitSchool();
 assert.equal(await page.locator('#page-title').textContent(),school.name);assert.equal(await page.locator('#year').inputValue(),'2022');
 assert.equal(await page.locator('[data-grade="6"]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#comparison-chips [data-remove-peer]').count(),0);
@@ -201,5 +211,5 @@ assert.ok((await mobilePicker.locator('#section-label').textContent()).includes(
 const failurePage=await browser.newPage();await failurePage.route('**/schools-2024-3.json',r=>r.abort());await failurePage.goto(new URL('?view=myschool&school=123838&year=2026&grade=3',base).href);
 await failurePage.locator('#retry-my-school').waitFor();await failurePage.unroute('**/schools-2024-3.json');await failurePage.locator('#retry-my-school').click();await failurePage.locator('#school-chart-0 svg').waitFor();await failurePage.close();
 assert.deepEqual(errors,[]);
-const report={passed:true,url:base,checks:['search hidden by default and after selection/reload','three primary destinations and details collapsed initially','single school search with matching results underneath','keyboard arrows, Enter, Escape, empty query and no matches','mobile search result selection by touch','distinct subject colours consistent in expanded charts','source-backed values, changes, gaps, levels and participant counts','grade overview','consistent chart scales and keyboard values','relative progress distinguishes slower and faster gains','missing years do not imply sustained patterns','real school data produces different question patterns','Malvern reading decline and writing relative gain match source results','question rules are explained in the panel','peer chart lines and relative progress','distance and board-type comparison group','save/restore school, peers and controls','selected peers included in export beyond filters','older-year findings exclude future data','suppression and bounded percentages retained','missing grade and coordinates explicit','French provincial benchmark','desktop/tablet/390px/320px layouts','request failure retry','no uncaught errors']};
+const report={passed:true,url:base,checks:['search hidden by default and after selection/reload','three primary destinations and details collapsed initially','single school search with matching results underneath','keyboard arrows, Enter, Escape, empty query and no matches','mobile search result selection by touch','distinct subject colours consistent in expanded charts','source-backed values, changes, gaps, levels and participant counts','grade overview','consistent chart scales and keyboard values','relative progress distinguishes slower and faster gains','missing years do not imply sustained patterns','real school data produces different question patterns','Malvern reading decline and writing relative gain match source results','question rules are explained in the panel','peer chart lines and relative progress','province-wide search and sortable distance','save/restore school, peers and controls','selected peers included in subject-neutral export despite search','older-year findings exclude future data','suppression and bounded percentages retained','missing grade and coordinates explicit','French provincial benchmark','desktop/tablet/390px/320px layouts','request failure retry','no uncaught errors']};
 await fs.writeFile(root+'/tests/school-validation.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();

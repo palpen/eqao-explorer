@@ -3,7 +3,7 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const subjects=['Reading','Writing','Mathematics'];
 const subjectColors=['#28679d','#a5633d','#79658d'];
-const defaultState=()=>({view:'trends',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all',school:'',comparisons:[],radius:5,nearType:'all',expanded:null,showOntario:true,showBoard:false,trendSubject:'all',trendBoard:'all',trendMinimum:0,trendConsistent:false});
+const defaultState=()=>({view:'trends',grade:3,language:'en',type:'all',year:2026,subject:0,pins:['66052','66095'],focus:'66052',search:'',sort:'name',direction:1,page:0,schoolBoard:'all',school:'',comparisons:[],distanceSort:'asc',expanded:null,showOntario:true,showBoard:false,trendSubject:'all',trendBoard:'all',trendMinimum:0,trendConsistent:false});
 const state=defaultState();
 const ui={moreFilters:false,trendLimit:5,schoolDetails:new Set()};
 let pushNavigation=false;
@@ -74,9 +74,9 @@ const changeHTML=v=>`<span class="${v===null?'':v>=0?'positive':'negative'}">${d
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,3500)}
 function refreshUrl(){
   const p=new URLSearchParams();for(const k of ['view','grade','language','type','year','subject','focus'])p.set(k,state[k]);p.set('pins',state.pins.join(','));
-  p.set('school',state.school);p.set('compare',state.comparisons.join(','));p.set('radius',state.radius);p.set('nearType',state.nearType);
+  p.set('school',state.school);p.set('compare',state.comparisons.join(','));p.set('distanceSort',state.distanceSort);
   p.set('trendSubject',state.trendSubject);p.set('trendBoard',state.trendBoard);p.set('trendMinimum',state.trendMinimum);p.set('trendConsistent',state.trendConsistent?'1':'0');
-  try{localStorage.setItem('eqao-my-school-v1',JSON.stringify({school:state.school,comparisons:state.comparisons,radius:state.radius,nearType:state.nearType,grade:state.grade,year:state.view==='archive'?2026:state.year}))}catch{}
+  try{localStorage.setItem('eqao-my-school-v1',JSON.stringify({school:state.school,comparisons:state.comparisons,distanceSort:state.distanceSort,grade:state.grade,year:state.view==='archive'?2026:state.year}))}catch{}
   const url=`${location.pathname}?${p}`,snapshot={eqao:{...state}};
   if(pushNavigation&&url!==`${location.pathname}${location.search}`)history.pushState(snapshot,'',url);
   else history.replaceState(snapshot,'',url);
@@ -86,10 +86,10 @@ function restoreUrl(useSaved=true){
   Object.assign(state,defaultState());
   try{
     const saved=useSaved?JSON.parse(localStorage.getItem('eqao-my-school-v1')):null;
-    if(saved){if(/^\d{6}$/.test(saved.school))state.school=saved.school;if(Array.isArray(saved.comparisons))state.comparisons=saved.comparisons.filter(x=>/^\d{6}$/.test(x)).slice(0,4);if([1,3,5,10,25,50].includes(saved.radius))state.radius=saved.radius;if(['all','Public','Catholic','Other authority'].includes(saved.nearType))state.nearType=saved.nearType;if([3,6].includes(saved.grade))state.grade=saved.grade;if([2022,2023,2024,2025,2026].includes(saved.year))state.year=saved.year;}
+    if(saved){if(/^\d{6}$/.test(saved.school))state.school=saved.school;if(Array.isArray(saved.comparisons))state.comparisons=saved.comparisons.filter(x=>/^\d{6}$/.test(x)).slice(0,4);if(['asc','desc'].includes(saved.distanceSort))state.distanceSort=saved.distanceSort;if([3,6].includes(saved.grade))state.grade=saved.grade;if([2022,2023,2024,2025,2026].includes(saved.year))state.year=saved.year;}
   }catch{}
   const p=new URLSearchParams(location.search);
-  for(const [k,allowed] of Object.entries({view:['myschool','boards','schools','trends','archive','sources'],language:['en','fr'],type:['all','Public','Catholic','Other authority','everything'],nearType:['all','Public','Catholic','Other authority'],trendSubject:['all','0','1','2']}))if(allowed.includes(p.get(k)))state[k]=p.get(k);
+  for(const [k,allowed] of Object.entries({view:['myschool','boards','schools','trends','archive','sources'],language:['en','fr'],type:['all','Public','Catholic','Other authority','everything'],distanceSort:['asc','desc'],trendSubject:['all','0','1','2']}))if(allowed.includes(p.get(k)))state[k]=p.get(k);
   if(/^\d{5}$/.test(p.get('trendBoard')||''))state.trendBoard=p.get('trendBoard');
   if(p.has('trendMinimum')&&[0,20,30,50,100].includes(+p.get('trendMinimum')))state.trendMinimum=+p.get('trendMinimum');
   state.trendConsistent=p.get('trendConsistent')==='1';
@@ -99,7 +99,6 @@ function restoreUrl(useSaved=true){
   if(p.has('school'))state.school=/^\d{6}$/.test(p.get('school'))?p.get('school'):'';
   if(!p.has('view'))state.view=state.school?'myschool':'trends';
   if(p.has('compare'))state.comparisons=p.get('compare').split(',').filter(x=>/^\d{6}$/.test(x)).slice(0,4);
-  if(p.has('radius')&&[1,3,5,10,25,50].includes(+p.get('radius')))state.radius=+p.get('radius');
   if(state.view==='archive'&&state.year>2019)state.year=2019;
   if(state.view!=='archive'&&state.year<2022)state.year=2026;
   $('#language').value=state.language;$('#boardType').value=state.type;
@@ -206,12 +205,14 @@ function drawTrend(el,series,years,readout,options={}){
   const ticks=[];for(let v=lower;v<=upper;v+=tickStep)ticks.push(v);if(ticks.at(-1)!==upper)ticks.push(upper);
   ticks.forEach(v=>{html+=`<line x1="${m.l}" x2="${w-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#dedfd8" stroke-width=".7"/><text x="${m.l-10}" y="${y(v)+4}" text-anchor="end">${v}%</text>`});
   years.forEach((yr,j)=>{html+=`<text x="${x(j)}" y="${h-15}" text-anchor="${j===0?'start':j===years.length-1?'end':'middle'}" style="${yr===options.selectedYear?'fill:#252824;font-weight:600':''}"><title>${yearLabel(yr)}</title>${w<460?`${String(yr-1).slice(2)}–${String(yr).slice(2)}`:yearLabel(yr)}</text>`});
+  let primaryPoints='';
   series.forEach((s,si)=>{
     let path='',prev=null;
     s.values.forEach((v,j)=>{if(!Number.isFinite(v)){prev=null;return}path+=`${prev===null?'M':'L'}${x(j)},${y(v)} `;prev=j});
     html+=`<path class="trend-line" data-series="${esc(s.name)}" d="${path}" fill="none" stroke="${s.color}" stroke-width="${s.dashed?1.8:2.3}" stroke-linejoin="round" stroke-linecap="round" ${s.dashed?'stroke-dasharray="4 4"':''}/>`;
-    s.values.forEach((v,j)=>{if(Number.isFinite(v)){const label=`${s.name} · ${yearLabel(years[j])} · ${pct(v)}`;html+=`<circle tabindex="0" role="button" aria-label="${esc(label)}" data-label="${esc(label)}" cx="${x(j)}" cy="${y(v)}" r="${j===selected?4.5:3.5}" fill="${s.color}"><title>${esc(label)}</title></circle>`}});
+    s.values.forEach((v,j)=>{if(Number.isFinite(v)){const label=`${s.name} · ${yearLabel(years[j])} · ${pct(v)}${s.participants?` · ${s.participants[j]==null?'Participation unavailable':`${number(s.participants[j])} fully participating students`}`:''}`;const point=`<circle tabindex="0" role="button" aria-label="${esc(label)}" data-label="${esc(label)}" cx="${x(j)}" cy="${y(v)}" r="${j===selected?4.5:3.5}" fill="${s.color}"><title>${esc(label)}</title></circle>`;if(si===0&&options.prioritizeFirst)primaryPoints+=point;else html+=point}});
   });
+  html+=primaryPoints;
   if(options.annotate&&series[0]){
     const vs=series[0].values,valid=vs.map((v,j)=>({v,j})).filter(a=>Number.isFinite(a.v));
     if(valid.length>1){
@@ -315,7 +316,7 @@ function exportCSV(){
   if(!exportRows.length){toast('There are no matching rows to export.');return}
   const fields=Object.keys(exportRows[0]);
   const text='\ufeff'+[fields.map(csvCell).join(','),...exportRows.map(r=>fields.map(k=>csvCell(r[k])).join(','))].join('\r\n');
-  const url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=`eqao-${state.view}-grade${state.grade}-${state.year}-${state.language}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`Exported ${exportRows.length} matching rows.`);
+  const url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=`eqao-${state.view}-grade${state.grade}-${state.year}-${state.view==='myschool'?'ontario':state.language}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`Exported ${exportRows.length} matching rows.`);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b){setView(b.dataset.view);$('#main').scrollIntoView({block:'start'})}});
 $('#export').onclick=exportCSV;

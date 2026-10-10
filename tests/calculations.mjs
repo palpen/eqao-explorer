@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 const root=fileURLToPath(new URL('..',import.meta.url)).replace(/\/$/,'');
 const read=async name=>JSON.parse(await fs.readFile(`${root}/site/data/${name}`,'utf8'));
 const core=await read('core.json'),index=await read('schools-index.json');
+const indexById=new Map(index.map(s=>[s.id,s]));
 const datasets=new Map(),maps=new Map();
 for(const year of [...core.years,...core.archiveYears])for(const grade of [3,6]){
   const rows=await read(`schools-${year}-${grade}.json`);
@@ -31,8 +32,8 @@ const testedSources=await Promise.all(sourceFiles.map(async path=>({path,text:aw
 for(const file of testedSources)vm.runInContext(file.text,context,{filename:file.path});
 context.inputCore=core;context.inputIndex=index;
 vm.runInContext('data=inputCore;schoolIndex=inputIndex;',context);
-const api=vm.runInContext('({state,difference,numeric,pct,delta,rawLabel,csvCell,schoolSummary,relativeSummary,conversationFindings,distanceKm,schoolBoardResult,provincial,drawTrend,renderBoards,renderArchiveSummary,renderSources,renderNearbySchools,renderAchievementContext,sortedRows,schoolTrendSummary,rankSchoolTrends,trendDistribution})',context);
-const counts={schoolSubjectPeriods:0,relativeComparisons:0,findings:0,chartSeries:0,boardSelections:0,archiveSelections:0,nearbyExports:0,distancePairs:0};
+const api=vm.runInContext('({state,difference,numeric,pct,delta,rawLabel,csvCell,schoolSummary,relativeSummary,conversationFindings,distanceKm,schoolBoardResult,provincial,drawTrend,renderBoards,renderArchiveSummary,renderSources,renderComparisonSchools,renderAchievementContext,sortedRows,schoolTrendSummary,rankSchoolTrends,trendDistribution})',context);
+const counts={schoolSubjectPeriods:0,relativeComparisons:0,findings:0,chartSeries:0,boardSelections:0,archiveSelections:0,comparisonExports:0,distancePairs:0};
 const value=(r,i)=>r?.values[i]??null;
 const subtract=(a,b)=>Number.isFinite(a)&&Number.isFinite(b)?a-b:null;
 const format=v=>v===null?'—':`${Number(v.toFixed(1))}%`;
@@ -209,20 +210,19 @@ console.log('PASS: every same-language coordinate pair');
 const exportCases=index.filter((school,i)=>i%100===0||!school.locationSource);
 for(const school of exportCases){
   const year=2026,grade=school.grades[0],years=core.years;
-  Object.assign(api.state,{year,grade,subject:0,radius:5,nearType:'all',comparisons:[]});
+  Object.assign(api.state,{year,grade,subject:0,distanceSort:'asc',comparisons:[]});
   const rows=years.map(y=>record(school.id,school.language,y,grade));
-  context.inputHome={meta:school,years,rows,r:rows.at(-1),current:datasets.get(`${year}-${grade}`).filter(r=>r.language===school.language),record:(id,y,g)=>record(id,school.language,y,g),history:(id,g=grade)=>years.map(y=>record(id,school.language,y,g))};
-  vm.runInContext('homeContext=inputHome;',context);api.renderNearbySchools();
+  const currentById=new Map(datasets.get(`${year}-${grade}`).map(r=>[r.id,r]));
+  context.inputHome={meta:school,years,rows,r:rows.at(-1),current:index.map(s=>({...s,...currentById.get(s.id)})),record:(id,y,g)=>record(id,indexById.get(id).language,y,g),history:(id,g=grade)=>years.map(y=>record(id,indexById.get(id).language,y,g))};
+  vm.runInContext('homeContext=inputHome;',context);api.renderComparisonSchools();
   const exported=vm.runInContext('exportRows',context);
   for(const line of exported){
-    const raw=record(line.school_id,school.language,year,grade),old=record(line.school_id,school.language,year-1,grade),prov=benchmark(school.language,year,grade);
-    assert.equal(line.reading,raw.raw[0]);assert.equal(line.writing,raw.raw[1]);assert.equal(line.mathematics,raw.raw[2]);
-    assert.equal(line.year_change_pp,subtract(value(raw,0),value(old,0)));
-    assert.equal(line.ontario_gap_pp,subtract(value(raw,0),value(prov,0)));
-    assert.equal(line.fully_participating_students,raw.participants[0]);assert.equal(line.source,raw.source);
-    if(line.school_id!==school.id&&Number.isFinite(school.lat)&&Number.isFinite(school.lon))assert.ok(line.distance_km<=5);
-    assert.equal(api.csvCell(line.year_change_pp),line.year_change_pp===null?'""':`"${line.year_change_pp}"`);
-    counts.nearbyExports++;
+    const raw=record(line.school_id,line.language,year,grade);
+    assert.equal(line.reading,raw?.raw[0]);assert.equal(line.writing,raw?.raw[1]);assert.equal(line.mathematics,raw?.raw[2]);
+    assert.equal(line.source,raw?.source);
+    assert.equal(line.distance_km,api.distanceKm(school,indexById.get(line.school_id)));
+    assert.equal(Object.hasOwn(line,'change_subject'),false);
+    counts.comparisonExports++;
   }
   api.renderAchievementContext();
   const html=element('#achievement-context').innerHTML;
@@ -283,7 +283,7 @@ assert.equal(api.schoolTrendSummary([fixture('a',[60,60,60])],[fixture('a',[50,5
 console.log('PASS: paired school trend eligibility, exclusions, tied ranks, medians and distributions across every year/grade/language/type/subject/minimum/direction selection');
 const report={passed:true,snapshot:core.updated,counts,
   code:testedSources.map(({path,text})=>({path,sha256:createHash('sha256').update(text).digest('hex')})),
-  checks:['Actual application functions tested for every current school, both grades, all five selected years and all subjects','Annual and longer-term differences; Ontario, board and peer relative changes','Generated finding eligibility, evidence and exclusion of future years','Every plotted school percentage and missing-data line break','Every board filter/subject median and provincial headline','Historical means and reporting/listed denominators for every board filter','All same-language school coordinate pairs independently checked','Nearby export rendering, signed CSV values and source','Every missing-location-source case and dynamic source totals','School trend eligibility, exclusions, tied ranks, medians, direction shares and distribution for every year/grade/language/type/subject/minimum/direction selection'],
-  limitations:['Pure calculations exhaustively exercised; browser layout/interactions checked by separate browser suites.','Peer histories use one deterministic real peer per school/grade/selected year; arbitrary pairs use that same verified arithmetic.','Full nearby export rendering uses a distributed selection of schools plus all missing location sources; its numerical helpers are exhaustively checked above.','Earth radius 6371 km is an approximation, not a publisher-provided distance.']};
+  checks:['Actual application functions tested for every current school, both grades, all five selected years and all subjects','Annual and longer-term differences; Ontario, board and peer relative changes','Generated finding eligibility, evidence and exclusion of future years','Every plotted school percentage and missing-data line break','Every board filter/subject median and provincial headline','Historical means and reporting/listed denominators for every board filter','All same-language school coordinate pairs independently checked','Comparison export rendering, CSV values, distance and source','Every missing-location-source case and dynamic source totals','School trend eligibility, exclusions, tied ranks, medians, direction shares and distribution for every year/grade/language/type/subject/minimum/direction selection'],
+  limitations:['Pure calculations exhaustively exercised; browser layout/interactions checked by separate browser suites.','Peer histories use one deterministic real peer per school/grade/selected year; arbitrary pairs use that same verified arithmetic.','Full comparison export rendering uses a distributed selection of schools plus all missing location sources; its numerical helpers are exhaustively checked above.','Earth radius 6371 km is an approximation, not a publisher-provided distance.']};
 for(const path of ['data/processed/calculation-audit.json','site/data/calculation-audit.json'])await fs.writeFile(`${root}/${path}`,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({passed:true,counts},null,2));

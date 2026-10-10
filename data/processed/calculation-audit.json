@@ -8,7 +8,7 @@
     "chartSeries": 115350,
     "boardSelections": 300,
     "archiveSelections": 120,
-    "nearbyExports": 1285,
+    "comparisonExports": 403725,
     "distancePairs": 6062217,
     "trendSelections": 4000,
     "trendSchoolPairs": 1475027
@@ -16,11 +16,11 @@
   "code": [
     {
       "path": "site/app.js",
-      "sha256": "a32b24a75c6c10dccfbe46fbf155870c6fccd8d0c7c272b0f806a6d99425c265"
+      "sha256": "63815a40e7c06199891c1c43c17002170cff9fbd277643f64ce9bc858b4f5300"
     },
     {
       "path": "site/school.js",
-      "sha256": "e7ca267e19c59a566af1e6be05d8f946c70d5451a8e3c4286cdecea3ab810dc1"
+      "sha256": "601a81b504f98db567669c8d61a7a2888ce68c3e8ef426ff6070f546426877f3"
     },
     {
       "path": "site/trends.js",
@@ -35,14 +35,14 @@
     "Every board filter/subject median and provincial headline",
     "Historical means and reporting/listed denominators for every board filter",
     "All same-language school coordinate pairs independently checked",
-    "Nearby export rendering, signed CSV values and source",
+    "Comparison export rendering, CSV values, distance and source",
     "Every missing-location-source case and dynamic source totals",
     "School trend eligibility, exclusions, tied ranks, medians, direction shares and distribution for every year/grade/language/type/subject/minimum/direction selection"
   ],
   "limitations": [
     "Pure calculations exhaustively exercised; browser layout/interactions checked by separate browser suites.",
     "Peer histories use one deterministic real peer per school/grade/selected year; arbitrary pairs use that same verified arithmetic.",
-    "Full nearby export rendering uses a distributed selection of schools plus all missing location sources; its numerical helpers are exhaustively checked above.",
+    "Full comparison export rendering uses a distributed selection of schools plus all missing location sources; its numerical helpers are exhaustively checked above.",
     "Earth radius 6371 km is an approximation, not a publisher-provided distance."
   ]
 }
