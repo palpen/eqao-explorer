@@ -37,10 +37,14 @@ input::placeholder { color: #74796f; }
 .small { font-size: .8125rem; }
 .eyebrow { font-size: .6875rem; letter-spacing: .14em; font-weight: 650; color: var(--muted); margin-bottom: 18px; }
 .topbar { height: 82px; display: flex; align-items: center; gap: 38px; padding: 0 34px; border-bottom: 1px solid var(--line); }
-.brand { color: var(--navy); text-decoration: none; font-family: var(--serif); font-size: 1.4375rem; letter-spacing: -.035em; display: flex; align-items: center; gap: 6px; }
-.brand strong { font-weight: 400; }
-.brandmark { width: 20px; height: 20px; margin-right: 5px; color: var(--blue); }
+.brand { color: var(--navy); text-decoration: none; font-family: var(--serif); font-size: 1.4375rem; letter-spacing: -.035em; display: flex; align-items: center; gap: 10px; }
+.brand-name { white-space: nowrap; }
+.brand strong { color: var(--blue); font-weight: 400; }
+.brandmark { width: 26px; height: 26px; color: var(--blue); flex: none; }
 .brandmark svg { display: block; width: 100%; height: 100%; }
+.brand-signal { color: var(--teal); }
+.brandmark path.brand-signal { stroke: currentColor; }
+.brandmark g.brand-signal { fill: currentColor; }
 .topmeta { font-size: .625rem; letter-spacing: .15em; color: var(--muted); }
 .divider { margin: 0 14px; color: #b0b4a8; }
 .app-home { margin-left: auto; color: var(--muted); font-size: .75rem; text-decoration: none; }
@@ -434,7 +438,7 @@ dialog::backdrop { background: #25282466; }
 @media (max-width: 760px) {
   .topbar { height: 68px; padding: 0 20px; gap: 10px; }
   .brand { font-size: 1.4rem; }
-  .brandmark { width: 20px; margin-right: 5px; }
+  .brandmark { width: 24px; height: 24px; }
   .topmeta { display: none; }
   .app-home { font-size: .6875rem; }
   .app-home span { margin-left: 2px; }
