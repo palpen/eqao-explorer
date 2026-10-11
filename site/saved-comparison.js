@@ -6,7 +6,7 @@
   const palette=['#28679d','#49756b','#a5633d','#79658d','#9b8032'];
   let context=null,request=0,chart=null;
   const clone=value=>JSON.parse(JSON.stringify(value));
-  const labels={myschool:'My school',trends:'School trends',schools:'Find schools',boards:'Compare boards',sources:'Sources',archive:'Historical archive'};
+  const labels={myschool:'My school',trends:'School trends',schools:'Find schools',boards:'Compare school boards',sources:'Sources',archive:'Historical archive'};
   function save(){try{sessionStorage.setItem(KEY,JSON.stringify(context));}catch{}}
   function writeRoute(push=false){
     if(!context)return;

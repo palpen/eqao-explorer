@@ -160,17 +160,25 @@ const classifications=new Map(core.boards.map(b=>[b.id,b]));
 const allowed=(r,language,type)=>r.language===language&&(type==='everything'||type==='all'&&['Public','Catholic'].includes(classifications.get(r.board??r.id)?.type)||classifications.get(r.board??r.id)?.type===type);
 for(const language of ['en','fr'])for(const grade of [3,6])for(const year of core.years)for(const type of ['all','Public','Catholic','Other authority','everything'])for(let subject=0;subject<3;subject++){
   Object.assign(api.state,{language,grade,year,type,subject,pins:[],focus:'',search:'',page:0});
-  const rows=core.results.filter(r=>r.year===year&&r.grade===grade&&allowed(r,language,type));
-  api.renderBoards(rows);
-  const stats=[...element('#content').innerHTML.matchAll(/class="stat">(.*?)<\/div>/g)].map(m=>m[1]);
-  const values=rows.map(r=>r.values[subject]).filter(Number.isFinite).sort((a,b)=>a-b);
-  const mid=Math.floor(values.length/2),median=values.length?(values.length%2?values[mid]:(values[mid-1]+values[mid])/2):null;
-  assert.equal(stats[0],format(benchmark(language,year,grade)?.values[subject]??null));
-  assert.equal(stats[1],format(median));
-  assert.equal(stats[2],`${values.length} <small>/ ${rows.length}</small>`);
+  const allRows=core.results.filter(r=>r.year===year&&r.grade===grade&&r.language===language),rows=allRows.filter(r=>allowed(r,language,type));
+  api.renderBoards(allRows);
+  assert.equal(element('#board-count').textContent,`${rows.length} boards · ${language==='en'?'English':'French'}-language`);
+  assert.match(element('#content').innerHTML,/Choose a board to begin/);
+  if(allRows.length){
+    const selected=allRows[0],province=benchmark(language,year,grade);
+    Object.assign(api.state,{pins:[selected.id],focus:selected.id});api.renderBoards(allRows);
+    const comparison=element('#content').innerHTML;
+    assert.ok(comparison.includes(`data-unpin="${selected.id}"`));
+    for(let i=0;i<3;i++){
+      assert.ok(comparison.includes(api.rawLabel(selected,i)));
+      assert.ok(comparison.includes(api.rawLabel(province,i)));
+      const gap=subtract(selected.values[i],province?.values[i]);
+      if(gap!==null)assert.ok(comparison.includes(api.delta(gap)));
+    }
+  }
   counts.boardSelections++;
 }
-console.log('PASS: board medians and historical means across all filters');
+console.log('PASS: board directory counts and selected-board comparisons across all filters');
 for(const language of ['en','fr'])for(const grade of [3,6])for(const year of core.archiveYears)for(const type of ['all','Public','Catholic','Other authority','everything'])for(let subject=0;subject<3;subject++){
   Object.assign(api.state,{language,grade,year,type,subject,schoolBoard:'all'});
   const rows=datasets.get(`${year}-${grade}`).filter(r=>allowed(r,language,type));

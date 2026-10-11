@@ -19,8 +19,8 @@ try{
   assert.equal(await page.locator('.school-selector').isVisible(),false,'School picker belongs to My school');
   await page.locator('[data-view="schools"]').click();await page.locator('#school-table').waitFor();
   assert.equal(await page.locator('#choose-school').isVisible(),false,'Find schools has no school-picker button');
-  await page.locator('#views [data-view="boards"]').click();await page.locator('#board-table').waitFor();
-  assert.equal(await page.locator('#choose-school').isVisible(),false,'Compare boards has no school-picker button');
+  await page.locator('#views [data-view="boards"]').click();await page.locator('#board-current').waitFor();
+  assert.equal(await page.locator('#choose-school').isVisible(),false,'Compare school boards has no school-picker button');
   await page.locator('[data-view="myschool"]').click();
   await page.locator('#welcome-choose').waitFor();
   assert.equal(await page.locator('#filter-bar').isVisible(),false,'No empty-school filters');
