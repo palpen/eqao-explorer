@@ -120,7 +120,7 @@ for(const link of $$('.brand'))link.onclick=event=>{
 function render(){
   if(!data)return;
   const token=++renderToken;chartRedraw=null;schoolChartRedraw=null;
-  clearSchoolLocation();
+  if(state.view!=='myschool')clearSchoolLocation();
   const displayView=state.view;
   if(displayView==='myschool'&&schoolInfo(state.school)){state.language=schoolInfo(state.school).language;$('#language').value=state.language}
   const rs=(state.view==='boards'?data.results.filter(r=>r.year===state.year&&r.grade===state.grade&&board(r.id)?.language===state.language):results()).sort((a,b)=>a.name.localeCompare(b.name));
@@ -143,6 +143,8 @@ function render(){
   $('.school-selector').hidden=displayView!=='myschool';
   if(displayView!=='myschool'&&$('#school-chooser').open){$('#school-chooser').open=false;$('#school-picker-search').value='';if(typeof updateSchoolPicker==='function')updateSchoolPicker()}
   document.body.classList.toggle('school-home',displayView==='myschool');
+  if(displayView==='myschool'&&!state.school)$('#school-chooser').open=true;
+  syncSchoolDiscovery();
   const years=state.view==='archive'?data.archiveYears:data.years;
   $('#year').innerHTML=[...years].reverse().map(y=>`<option value="${y}" ${y===state.year?'selected':''}>${yearLabel(y)}</option>`).join('');
   const notice=$('#notice');notice.hidden=true;
@@ -151,9 +153,7 @@ function render(){
   refreshUrl();
   if(displayView==='myschool'&&!state.school){
     $('#export').hidden=true;exportRows=[];
-    const chooser=$('#school-chooser');
-    $('#content').innerHTML=`<section class="welcome-panel"><p>Choose a school to see reading, writing and mathematics together, with Ontario benchmarks and changes over time.</p><button id="welcome-choose" class="button" aria-expanded="${chooser.open}" aria-controls="school-chooser">${chooser.open?'Close search':'Find your school'}</button></section>`;
-    $('#welcome-choose').onclick=()=>{chooser.open=!chooser.open;updateSchoolChooserLabel();if(chooser.open)$('#school-picker-search').focus()};
+    $('#content').innerHTML='';
   }
   else if(displayView==='myschool')renderMySchool(token);
   else if(displayView==='trends')renderSchoolTrends(token);

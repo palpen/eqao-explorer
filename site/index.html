@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
   <meta name="theme-color" content="#faf9f6">
   <title>EQAO Explorer · Ontario</title>
   <meta name="description" content="Understand your child's school: Grade 3 and Grade 6 EQAO results, trends, Ontario and board benchmarks, and nearby school comparisons.">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23faf9f6'/%3E%3Ccircle cx='17' cy='17' r='10.5' fill='none' stroke='%2328679d' stroke-width='3.4'/%3E%3Cpath d='m24.5 24.5 8 8' fill='none' stroke='%2328679d' stroke-width='3.4' stroke-linecap='round'/%3E%3Cpath d='m10.5 20.5 5-4 4 2 5-6' fill='none' stroke='%2349756b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cg fill='%2349756b'%3E%3Ccircle cx='10.5' cy='20.5' r='1.8'/%3E%3Ccircle cx='15.5' cy='16.5' r='1.8'/%3E%3Ccircle cx='19.5' cy='18.5' r='1.8'/%3E%3Ccircle cx='24.5' cy='12.5' r='1.8'/%3E%3C/g%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="saved.css"><script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script><script defer src="/_vercel/insights/script.js"></script><script src="app.js" defer></script><script src="school.js" defer></script><script src="school-map.js" defer></script><script src="trends.js" defer></script><script src="saved-model.js" defer></script><script src="saved-comparison.js" defer></script><script src="saved.js" defer></script>
+  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="saved.css"><link rel="stylesheet" href="school-discovery.css"><script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script><script defer src="/_vercel/insights/script.js"></script><script src="app.js" defer></script><script src="school.js" defer></script><script src="school-map-providers.js" defer></script><script src="school-map-maplibre.js" defer></script><script src="school-map.js" defer></script><script src="school-keyboard.js" defer></script><script src="trends.js" defer></script><script src="saved-model.js" defer></script><script src="saved-comparison.js" defer></script><script src="saved.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to results</a>
@@ -16,15 +16,24 @@
   <nav id="explore-views" aria-label="Explore schools" hidden><button data-view="trends">School trends</button><button data-view="schools">Find schools</button></nav>
   <div id="school-heading-layout">
     <div class="page-heading"><div><p class="eyebrow" id="section-label" hidden>SCHOOL TRENDS</p><h1 id="page-title">Understand Ontario’s school results</h1><p id="page-description">Grade 3 and 6 EQAO results in reading, writing and math.</p></div><button id="choose-school" class="button secondary" aria-expanded="false" aria-controls="school-chooser" hidden>Change school</button></div>
+    <div id="school-search-workspace">
+    <section class="school-selector" aria-label="Find your school" hidden>
+      <details id="school-chooser"><summary id="chosen-school-label"><span id="selected-school-name">Explore Ontario schools</span><span id="school-change-label" class="school-change-action">Find your school</span></summary><div class="school-picker-fields">
+        <div class="school-search-controls"><label for="school-picker-search">Find your school</label><div><input id="school-picker-search" type="search" role="combobox" aria-autocomplete="list" aria-haspopup="grid" aria-expanded="false" aria-controls="school-picker-results" aria-describedby="school-picker-hint picker-count" autocomplete="off" placeholder="School name or city…"><button type="button" id="school-search-done" hidden>Done</button><button type="button" id="school-search-close" aria-label="Close school search" hidden>Close</button></div><p id="school-picker-hint" class="small muted">Search by school name, city, board or school number.</p></div>
+        <p id="picker-count" class="small muted" role="status">Loading schools…</p>
+        <div id="school-picker-results" class="school-picker-results" role="grid" aria-label="Matching schools" hidden></div>
+        <button type="button" id="school-picker-more" class="text-button" hidden>Show more schools</button>
+        <button type="button" id="clear-school" class="text-button" hidden>Clear school</button>
+      </div></details>
+    </section>
     <section id="school-location" aria-labelledby="school-location-title" hidden>
-      <div class="school-map-heading"><h2 id="school-location-title">School location</h2><div class="school-map-actions"><button id="school-map-recenter" type="button" disabled>Recenter</button><a id="school-map-link" target="_blank" rel="noopener">Open in Google Maps ↗</a></div></div>
+      <div class="school-map-heading"><h2 id="school-location-title">School location</h2><div class="school-map-actions"><label class="sr-only" for="school-map-background">Map background</label><select id="school-map-background" aria-label="Map background"></select><button id="school-map-recenter" type="button" disabled>Recenter</button><a id="school-map-link" target="_blank" rel="noopener" hidden>Open in Google Maps ↗</a></div></div>
       <p id="school-map-status" role="status"></p>
       <div id="school-map" role="region" aria-label="Interactive school location map" hidden></div>
+      <p id="school-map-preview" class="small muted" aria-live="polite"></p>
     </section>
+    </div>
   </div>
-  <section class="school-selector" aria-label="Find your school">
-    <details id="school-chooser"><summary id="chosen-school-label"><span id="selected-school-name">Explore Ontario schools</span><span id="school-change-label" class="school-change-action">Find your school</span></summary><div class="school-picker-fields"><label for="school-picker-search">Find your school</label><input id="school-picker-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="school-picker-results" aria-describedby="school-picker-hint picker-count" autocomplete="off" placeholder="School name or city…"><p id="school-picker-hint" class="small muted">Search by school name, city, board or school number.</p><div id="school-picker-results" class="school-picker-results" role="listbox" aria-label="Matching schools" hidden></div><p id="picker-count" class="small muted" role="status">Loading schools…</p><button type="button" id="clear-school" class="text-button" hidden>Clear school</button></div></details>
-  </section>
   <div id="loading" role="status">Loading Ontario’s results…</div>
   <div id="dashboard" hidden>
     <div class="toolbar" id="filter-bar" aria-label="Result filters">

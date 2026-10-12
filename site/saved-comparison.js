@@ -24,6 +24,7 @@
     await getSchoolIndex();const ids=[...new Set(schools)].filter(id=>schoolInfo(id)).slice(0,5);if(ids.length<2)return false;
     const previous=context?.returnContext||captureReturn();
     context={schools:ids,subject:0,grade:state.grade,year:state.year<2022?2026:state.year,reference:'',returnContext:previous};
+    $('#school-chooser').open=false;$('#school-picker-search').blur();clearSchoolLocation();
     setVisible(true);writeRoute(true);await draw();pane.scrollIntoView({block:'start'});$('#saved-comparison-title')?.focus({preventScroll:true});return true;
   }
   function back({restore=true}={}){

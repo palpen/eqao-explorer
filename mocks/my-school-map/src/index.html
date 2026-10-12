@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
+  <meta name="theme-color" content="#faf9f6">
+  <title>My school · EQAO Explorer preview</title>
+  <style>/* INLINE_STYLES */</style>
+</head>
+<body>
+  <section class="preview-tools" aria-label="Mock-up preview controls">
+    <span>Design preview</span>
+    <div class="preview-modes"><button id="preview-desktop" aria-pressed="true">Desktop</button><button id="preview-phone" aria-pressed="false">Phone view</button></div>
+    <button id="preview-keyboard-toggle" aria-pressed="false" hidden>Show keyboard</button>
+  </section>
+  <div id="phone-preview-stage" class="phone-preview-stage" hidden>
+    <iframe id="phone-preview-frame" title="Interactive phone preview of My school"></iframe>
+    <div id="preview-keyboard" class="preview-keyboard" aria-label="Preview keyboard" hidden>
+      <p>Keyboard preview</p><div id="preview-keyboard-keys"></div>
+      <div class="keyboard-bottom"><button data-preview-key="Backspace" aria-label="Delete last character">⌫</button><button data-preview-key=" " class="space-key">space</button><button data-preview-key="Done" class="done-key">Done</button></div>
+      <div class="keyboard-home" aria-hidden="true"></div>
+    </div>
+  </div>
+  <a class="skip" href="#search">Skip to school search</a>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="EQAO Explorer preview">
+      <svg class="brandmark" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11.5" cy="11.5" r="8.75" fill="none" stroke="currentColor" stroke-width="2.25"/><path d="m18 18 7 7" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"/><path class="signal" d="m5.75 14.25 4.25-3.5 3.5 1.75 4-5" fill="none" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>EQAO <strong>Explorer</strong></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <button id="my-school-nav" class="navitem active" aria-current="page">My school</button>
+      <button id="saved-school-nav" class="navitem">Saved schools <span id="saved-count" class="saved-count">0</span></button>
+      <span class="navitem">Explore schools</span>
+      <span class="navitem">Compare school boards</span>
+    </nav>
+  </header>
+  <main id="school-map-preview">
+    <div class="page-heading"><h1 id="page-title">My school</h1></div>
+    <section class="search-map" aria-label="Find your school on the map">
+      <div class="search-panel">
+        <div class="search-top">
+          <label for="search">Find your school</label>
+          <div class="search-row"><div class="search-field">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+            <input id="search" type="search" role="combobox" aria-autocomplete="list" aria-haspopup="grid" aria-controls="school-results" aria-expanded="true" aria-describedby="search-hint match-count" placeholder="School name or city…" autocomplete="off" enterkeyhint="search">
+          </div><button id="finish-search" class="finish-search">Done</button></div>
+          <p id="search-hint">Search by school name, city, board or school number.</p>
+          <div class="examples" aria-label="Example searches"><span>Try</span><button data-query="Malvern">Malvern</button><button data-query="Ottawa">Ottawa</button><button data-query="St Mary">St Mary</button></div>
+          <p id="match-count" role="status" aria-live="polite">Loading schools…</p>
+        </div>
+        <div id="school-results" role="grid" aria-label="Matching schools" tabindex="-1"></div>
+        <div id="empty-results" hidden><h2>No matching schools</h2><p>Try a shorter name, a city or a school number.</p></div>
+        <button id="show-more" class="show-more" hidden>Show more schools</button>
+        <p class="search-footer">Hover or use ↑ ↓ to preview. Select to make it your school.</p>
+      </div>
+      <div class="map-panel">
+        <div id="map-view" role="region" aria-label="School location map"><div class="map-loading">Loading the street map…</div></div>
+        <div class="map-toolbar">
+          <div class="background-control"><label for="background">Map style</label><select id="background"><option value="quiet">Quiet</option><option value="streets">Street detail</option></select></div>
+          <button id="show-ontario" class="map-button" aria-label="Show matching schools on the map">Show Ontario</button>
+        </div>
+        <div id="map-error" class="map-error" role="status" hidden><span></span><button id="retry-map">Retry map</button></div>
+        <div id="map-detail" class="map-detail" hidden>
+          <div><p id="map-detail-context">School preview</p><h2 id="map-school-name"></h2><p id="map-school-meta"></p><p id="map-school-location" hidden>Published location unavailable.</p></div>
+          <button id="choose-school" class="primary">Make this my school</button>
+        </div>
+        <div id="map-caption" class="map-caption">Ontario schools</div>
+      </div>
+    </section>
+    <section id="saved-school-panel" aria-label="Saved schools" hidden>
+      <p id="saved-list-note" class="saved-list-note">Saved in this browser.</p>
+      <div id="saved-school-results" role="grid" aria-label="Saved school list"></div>
+      <div id="saved-empty" class="saved-empty"><h2>Start your school list</h2><p>Save schools while searching to find them here later.</p><button id="saved-find-school" class="primary">Find a school</button></div>
+    </section>
+    <section id="school-summary" class="school-summary" aria-labelledby="summary-name" hidden>
+      <div class="summary-heading"><div><h2 id="summary-name"></h2><p id="summary-meta"></p></div><div class="grade-control" aria-label="Grade"><button data-grade="3" aria-pressed="true">Grade 3</button><button data-grade="6" aria-pressed="false">Grade 6</button></div></div>
+      <p class="result-period">2025–26 · Students meeting the provincial standard (Levels 3 &amp; 4)</p>
+      <div id="results" class="results"></div>
+    </section>
+    <footer><p>An independent view of public EQAO data.</p><p>Preview only · School locations from the published directory.</p></footer>
+  </main>
+  <div id="save-status" class="save-status" role="status" aria-live="polite" hidden><span></span><button id="undo-remove" hidden>Undo</button></div>
+  <script id="school-data" type="application/json">/* INLINE_DATA */</script>
+  <script>/* INLINE_PROVIDERS */</script>
+  <script>/* INLINE_ADAPTER */</script>
+  <script>/* INLINE_SAVED */</script>
+  <script>/* INLINE_APP */</script>
+  <script>/* INLINE_PREVIEW */</script>
+</body>
+</html>

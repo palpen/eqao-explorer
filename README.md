@@ -15,7 +15,8 @@ The app is static HTML, CSS, and JavaScript. It has no backend, database, accoun
 - Three combined subject panels show the current school percentage, annual change, Ontario comparison, and a compact historical chart. The panels share a 0–100% scale, align on desktop, and stack on phones. Focusing or tapping a chart point shows its year-specific fully participating student count. Reading is blue, writing terracotta, and mathematics purple.
 - Expand a subject to compare against Ontario, optionally its board, and up to four selected schools. Chart values remain available by keyboard, touch, and in a table. One evidence-backed observation appears below the subject panels; school comparisons, achievement/participation, and school-conversation questions expand on demand. The side-by-side grade overview lives inside achievement details.
 - Relative progress: how the school’s gap changes against each benchmark or selected school, rather than just whether its own score rises.
-- The selected school has an interactive location map beside its heading, stacking below it on smaller screens. Map libraries load only for a school with published coordinates. Leaflet and MapLibre display OpenFreeMap imagery; map failures and missing coordinates preserve the school results and an external Google Maps link.
+- My School opens a map alongside school-name search before selection. Search matches appear as pins/clusters; exact names, individual matches, hovered results and arrow keys move the map. Choose opens the dashboard; each separate Save button uses the existing browser-local Saved schools shortlist, where View reopens a school.
+- MapLibre displays OpenFreeMap backgrounds directly. Mobile search places the map above results; native keyboard resizing fits the search, map and scrollable Save controls to the visible viewport. Done restores navigation. Map failures leave search, results, saves and the external Google Maps link available. Schools without published coordinates remain searchable without an invented pin.
 - One Ontario-wide comparison picker with school/name/city/board search, current reading/writing/mathematics results, and a sortable straight-line Distance column. The nearest schools appear first; unknown distances sort last and remain selectable. Board type and language remain visible in each row. Selected schools stay saved while searching or sorting, and the comparison chart below the picker chooses the subject. Missing grade/year results remain gaps; English and French assessments use different benchmarks.
 - Achievement-level distributions, participation, and questions grounded in persistent patterns. Suppressed, bounded and missing values remain explicit.
 - Official school, board, and provincial results for **2021–22 through 2025–26**.
@@ -241,3 +242,15 @@ For details on suppressed values, denominators, historical comparisons, and what
 ## License
 
 Original work is licensed under the [MIT License](LICENSE), Copyright (c) 2026 Palermo Penano. The grant is limited to the work identified in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); the exclusions and separate third-party terms there apply.
+
+## School map providers and lifecycle
+
+`site/school-map-providers.js` independently configures the engine factory and the background registry (Quiet / Street detail currently use OpenFreeMap). To add a compatible vector style, add a registry entry with its style URL and label; the menu is generated from this registry. Preserve the provider's attribution and any account/token requirements.
+
+`site/school-map.js` owns previews, matches and selected-school interactions. It calls only a neutral async `createSchoolMap({container, background, onSchoolPreview, onSchoolChoose, onStatus})` factory. The returned adapter implements `setSchools`, `highlight`, `focus`, `fit`, `setBackground`, `camera`, `resize` and `destroy`. `focus`/`fit` accept `{animate}` and return false when no valid locations are available; `camera()` returns named `{lat, lon, zoom}`. Callbacks carry plain school objects.
+
+`site/school-map-maplibre.js` alone owns MapLibre classes, GeoJSON coordinate order, clustering, style restoration and camera animation. A future interactive renderer or animation service needs a new adapter registered in `schoolMapEngines`; background changes do not require rewriting search or Saved schools. MapLibre respects reduced motion. The same canvas survives searches, school selection, grade/year changes and background swaps; leaving My School or entering the temporary comparison releases it. Loading failures can be retried.
+
+`site/school-keyboard.js` listens to VisualViewport height/offset changes and layout viewport resizing. Keyboard mode applies only to focused mobile My School search. Browser checks cover 390px/320px widths, 490px/270px visible heights, and a VisualViewport-only resize with an offset. These simulated checks should be supplemented by physical iOS/Android device testing.
+
+The approved review prototype's source is retained in `mocks/my-school-map/`; generated HTML and screenshots stay local. Its isolated storage key is never imported into the production shortlist.

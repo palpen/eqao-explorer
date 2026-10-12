@@ -2,7 +2,7 @@
 
 // School selections persist locally. Publisher percentages always remain the benchmarks.
 let schoolIndex=[], schoolIndexRequest, homeContext;
-let pickerMatches=[], pickerActive=-1, pickerDismissed=false, pickerLoading=true, pickerLoadError=false;
+let pickerMatches=[], pickerAllMatches=[], pickerLimit=12, pickerActive=-1, pickerDismissed=false, pickerLoading=true, pickerLoadError=false;
 const peerColors=['#4e8c93','#b18c38','#a75b7b','#617eb6'];
 const languageLabel=l=>l==='fr'?'French-language':'English-language';
 const schoolInfo=id=>schoolIndex.find(s=>s.id===id);
@@ -18,34 +18,48 @@ async function getSchoolIndex(){
   }
   return schoolIndexRequest;
 }
+const normalizeSchoolSearch=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+function matchingPickerSchools(query){
+  const q=normalizeSchoolSearch(query),tokens=q.split(' ').filter(Boolean);
+  if(!tokens.length)return schoolIndex;
+  const rank=s=>{const name=normalizeSchoolSearch(s.name);return name===q?0:normalizeSchoolSearch(s.city)===q?1:name.startsWith(q)?2:name.includes(q)?3:4};
+  return schoolIndex.filter(s=>{const haystack=normalizeSchoolSearch(`${s.name} ${s.city} ${s.id} ${board(s.board)?.name||''}`);return tokens.every(t=>haystack.includes(t))}).sort((a,b)=>rank(a)-rank(b)||a.name.localeCompare(b.name));
+}
+function pickerSaveButton(s){
+  const ready=!!window.savedSchools,on=ready&&window.savedSchools.model.ids.includes(s.id);
+  return `<button type="button" class="bookmark-control school-save" data-bookmark="${s.id}" aria-pressed="${on}" aria-label="${on?'Unsave':'Save'} ${esc(s.name)}" ${ready?'':'disabled'}><svg class="bookmark-icon" viewBox="0 0 20 24" aria-hidden="true"><path d="M4 3h12v18l-6-4-6 4z"/></svg><span class="school-save-label">${on?'Saved':'Save'}</span></button>`;
+}
 function updateSchoolPicker(){
-  const q=$('#school-picker-search').value.trim().toLocaleLowerCase();
-  const matches=q?schoolIndex.filter(s=>`${s.name} ${s.city} ${s.id} ${board(s.board)?.name||''}`.toLocaleLowerCase().includes(q)):[];
-  pickerMatches=matches.slice(0,8);pickerActive=-1;pickerDismissed=false;
-  $('#school-picker-results').innerHTML=pickerMatches.map(s=>`<button type="button" class="school-option" id="school-option-${s.id}" role="option" aria-selected="false" tabindex="-1" data-pick-school="${s.id}"><strong>${esc(s.name)}</strong><small>${esc([s.city,board(s.board)?.name,languageLabel(s.language)].filter(Boolean).join(' · '))}${s.latestYear<2026?` · last reported ${yearLabel(s.latestYear)}`:''}</small></button>`).join('');
+  const q=$('#school-picker-search').value.trim();
+  pickerAllMatches=matchingPickerSchools(q);
+  pickerMatches=pickerAllMatches.slice(0,pickerLimit);pickerActive=-1;pickerDismissed=false;
+  $('#school-picker-results').innerHTML=pickerMatches.map(s=>`<div class="school-option" role="row" data-picker-row="${s.id}"><div role="gridcell" id="school-option-${s.id}"><button type="button" class="school-option-name" data-pick-school="${s.id}"><strong>${esc(s.name)}</strong><small>${esc([s.city,board(s.board)?.name,languageLabel(s.language)].filter(Boolean).join(' · '))}${s.latestYear<2026?` · last reported ${yearLabel(s.latestYear)}`:''}${!Number.isFinite(s.lat)||!Number.isFinite(s.lon)?' · Location unavailable':''}</small></button></div><div role="gridcell">${pickerSaveButton(s)}</div></div>`).join('');
   if(pickerLoading)$('#picker-count').textContent='Loading schools…';
   else if(pickerLoadError)$('#picker-count').innerHTML='Schools could not be loaded. <button class="text-button" id="retry-school-picker">Try again</button>';
-  else $('#picker-count').textContent=q?matches.length?`${matches.length>8?`Showing 8 of ${number(matches.length)} matches. Keep typing to narrow the list.`:`${matches.length} matching ${matches.length===1?'school':'schools'}.`} Select a school to open its dashboard.`:'No schools found. Try another name, city, board or school number.':`Search ${number(schoolIndex.length)} schools. Your choice is saved in this browser.`;
+  else $('#picker-count').textContent=q?pickerAllMatches.length?`${pickerAllMatches.length>pickerLimit?`Showing ${pickerLimit} of ${number(pickerAllMatches.length)} matches.`:`${pickerAllMatches.length} matching ${pickerAllMatches.length===1?'school':'schools'}.`} Choose a school or save it for later.`:'No schools found. Try another name, city, board or school number.':`Search ${number(schoolIndex.length)} schools. Choose a school or save it for later.`;
+  $('#school-picker-more').hidden=pickerAllMatches.length<=pickerLimit;
   updatePickerActive();
-  const s=schoolInfo(state.school);
-  $('#selected-school-name').textContent=s?s.name:'Explore Ontario schools';
-  $('#clear-school').hidden=!s;
+  const school=schoolInfo(state.school);
+  $('#selected-school-name').textContent=school?school.name:'Explore Ontario schools';
+  $('#clear-school').hidden=!school;
   updateSchoolChooserLabel();
+  if(typeof updateSchoolMapMatches==='function')updateSchoolMapMatches(pickerAllMatches,q);
 }
 function updateSchoolChooserLabel(){
   const open=$('#school-chooser').open;
   $('#school-change-label').textContent=open?'Close search':schoolInfo(state.school)?'Change school':'Find your school';
   $('#choose-school').textContent=open?'Close search':'Change school';
   $('#choose-school').setAttribute('aria-expanded',String(open));
-  if($('#welcome-choose')){$('#welcome-choose').textContent=open?'Close search':'Find your school';$('#welcome-choose').setAttribute('aria-expanded',String(open))}
+  $('#school-search-close').hidden=!schoolInfo(state.school);
 }
+$('#school-search-close').onclick=()=>{$('#school-chooser').open=false;$('#school-picker-search').blur();updateSchoolChooserLabel();syncSchoolDiscovery();$('#choose-school').focus({preventScroll:true})};
 $('#choose-school').onclick=()=>{const chooser=$('#school-chooser');chooser.open=!chooser.open;if(chooser.open)$('#school-picker-search').focus()};
 function updatePickerActive(){
   const input=$('#school-picker-search'),shown=pickerMatches.length>0&&!pickerDismissed;
   $('#school-picker-results').hidden=!shown;input.setAttribute('aria-expanded',String(shown));
   if(shown&&pickerActive>=0)input.setAttribute('aria-activedescendant',`school-option-${pickerMatches[pickerActive].id}`);
   else input.removeAttribute('aria-activedescendant');
-  $$('#school-picker-results [role="option"]').forEach((el,i)=>{const active=i===pickerActive;el.classList.toggle('active',active);el.setAttribute('aria-selected',String(active))});
+  $$('#school-picker-results [role="row"]').forEach((el,i)=>{const active=i===pickerActive;el.classList.toggle('active',active);el.setAttribute('aria-selected',String(active))});
   if(shown&&pickerActive>=0)$(`#school-option-${pickerMatches[pickerActive].id}`).scrollIntoView({block:'nearest'});
 }
 async function selectMySchool(id){
@@ -65,13 +79,17 @@ $('#clear-school').onclick=()=>{
   updateSchoolPicker();render();$('#views [data-view="trends"]').focus();
   toast('School selection cleared.');
 };
-$('#school-picker-search').oninput=updateSchoolPicker;
+$('#school-picker-search').oninput=()=>{pickerLimit=12;updateSchoolPicker()};
+$('#school-picker-more').onclick=()=>{const previous=pickerLimit;pickerLimit+=12;updateSchoolPicker();const next=$('#school-picker-results').querySelectorAll('[data-pick-school]')[previous];next?.focus({preventScroll:true});next?.scrollIntoView({block:'nearest'})};
+$('#school-picker-results').addEventListener('pointerdown',e=>{if(e.target.closest('[data-bookmark]')&&document.activeElement===$('#school-picker-search'))e.preventDefault()});
+$('#school-picker-results').addEventListener('pointerover',e=>{const b=e.target.closest('[data-pick-school]');if(b&&!(e.relatedTarget&&b.contains(e.relatedTarget)))previewSchoolLocation(schoolInfo(b.dataset.pickSchool))});
+$('#school-picker-results').addEventListener('focusin',e=>{const b=e.target.closest('[data-pick-school]');if(b)previewSchoolLocation(schoolInfo(b.dataset.pickSchool))});
 $('#school-picker-search').onkeydown=e=>{
   if(e.isComposing)return;
   if((e.key==='ArrowDown'||e.key==='ArrowUp')&&pickerMatches.length){
     e.preventDefault();pickerDismissed=false;
     pickerActive=e.key==='ArrowDown'?(pickerActive+1)%pickerMatches.length:(pickerActive<=0?pickerMatches.length:pickerActive)-1;
-    updatePickerActive();
+    updatePickerActive();previewSchoolLocation(pickerMatches[pickerActive]);
   }else if(e.key==='Enter'&&pickerMatches.length&&!pickerDismissed){e.preventDefault();selectMySchool(pickerMatches[Math.max(0,pickerActive)].id)}
   else if(e.key==='Escape'&&!pickerDismissed){e.preventDefault();pickerDismissed=true;pickerActive=-1;updatePickerActive()}
 };
@@ -79,6 +97,7 @@ $('#school-picker-results').onclick=e=>{const b=e.target.closest('[data-pick-sch
 $('#picker-count').onclick=e=>{if(e.target.closest('#retry-school-picker')){const request=getSchoolIndex();updateSchoolPicker();request.then(updateSchoolPicker).catch(updateSchoolPicker)}};
 $('#school-chooser').addEventListener('toggle',()=>{
   updateSchoolChooserLabel();
+  if(typeof syncSchoolDiscovery==='function')syncSchoolDiscovery();
   if(!$('#school-chooser').open){pickerDismissed=true;pickerActive=-1;updatePickerActive()}
   else{pickerDismissed=false;updatePickerActive();if(document.activeElement===$('#chosen-school-label'))$('#school-picker-search').focus()}
 });
@@ -148,7 +167,7 @@ async function renderMySchool(token){
     if(state.expanded===null&&state.comparisons.length)state.expanded=0;
     $('#page-title').textContent=r?.name||meta.name;
     $('#page-description').textContent=`${board(r?.board||meta.board)?.name||'Board unavailable'} · ${meta.city||'Ontario'} · ${languageLabel(meta.language)} · ${board(r?.board||meta.board)?.type||'Other authority'}`;
-    renderSchoolLocation(meta,token);
+    renderSchoolLocation(meta);
     $('#export').hidden=false;
     $('#content').innerHTML=`
       <div class="school-overview-caption"><span>Students meeting or exceeding the provincial standard</span><span>Grade ${state.grade} · ${yearLabel(state.year)} · Levels 3 & 4</span></div>

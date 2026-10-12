@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node tests/saved-schools.cjs && node tests/calculations.mjs && node tests/school-browser.mjs && node tests/browser.mjs && node tests/trends-browser.mjs && node tests/navigation-browser.mjs && node tests/school-map-browser.mjs && node tests/comparison-browser.mjs",
-    "check": "node --check site/app.js && node --check site/school.js && node --check site/trends.js && node --check site/school-map.js && node --check site/saved-model.js && node --check site/saved.js && node --check site/saved-comparison.js",
+    "check": "node --check site/app.js && node --check site/school.js && node --check site/trends.js && node --check site/school-map-providers.js && node --check site/school-map-maplibre.js && node --check site/school-map.js && node --check site/school-keyboard.js && node --check site/saved-model.js && node --check site/saved.js && node --check site/saved-comparison.js",
     "test:calculations": "node tests/calculations.mjs",
     "test:browser": "node tests/school-browser.mjs && node tests/browser.mjs && node tests/trends-browser.mjs && node tests/navigation-browser.mjs && node tests/school-map-browser.mjs && node tests/comparison-browser.mjs",
     "test:data": "python3 tests/data.py",
